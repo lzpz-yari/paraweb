@@ -1,0 +1,160 @@
+{% extends 'productos/base.html' %}
+
+{% block title %}{{ producto.nombre }} - Detalles{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    <a href="{% url 'productos:lista' %}" class="btn">← Volver a la lista</a>
+</div>
+
+<h2>Detalle del Producto</h2>
+
+<div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin-top: 20px;">
+    
+    <!-- Sección: Información Básica -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="border-bottom: 2px solid #333; padding-bottom: 10px;">
+            Información Básica
+        </h3>
+        
+        <table style="width: 100%; margin-top: 15px;">
+            <tr>
+                <td style="width: 200px; font-weight: bold;">Código de Barras:</td>
+                <td>{{ producto.codigo_barras }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">Nombre:</td>
+                <td>{{ producto.nombre }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">Descripción:</td>
+                <td>
+                    {% if producto.descripcion %}
+                        {{ producto.descripcion }}
+                    {% else %}
+                        <em style="color: #999;">Sin descripción</em>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <!-- Sección: Precios -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="border-bottom: 2px solid #333; padding-bottom: 10px;">
+         Precios
+        </h3>
+        
+        <table style="width: 100%; margin-top: 15px;">
+            <tr>
+                <td style="width: 200px; font-weight: bold;">Precio de Compra:</td>
+                <td>${{ producto.precio_compra }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">Precio de Venta:</td>
+                <td style="font-size: 1.2em; color: #28a745;">
+                    <strong>${{ producto.precio_venta }}</strong>
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">Ganancia por Unidad:</td>
+                <td style="color: #007bff;">
+                    <strong>${{ producto.calcular_ganancia }}</strong>
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">Margen de Ganancia:</td>
+                <td>
+                    {% widthratio producto.calcular_ganancia producto.precio_venta 100 %}%
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <!-- Sección: Inventario -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="border-bottom: 2px solid #333; padding-bottom: 10px;">
+            Inventario
+        </h3>
+        
+        <table style="width: 100%; margin-top: 15px;">
+            <tr>
+                <td style="width: 200px; font-weight: bold;">Stock Actual:</td>
+                <td>
+                    <span style="font-size: 1.3em; font-weight: bold;">
+                        {{ producto.stock }} unidades
+                    </span>
+                    
+                    {% if producto.necesita_reorden %}
+                        <span style="color: red; margin-left: 10px;">
+                            Stock bajo - Necesita reorden
+                        </span>
+                    {% else %}
+                        <span style="color: green; margin-left: 10px;">
+                            Stock adecuado
+                        </span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">Stock Mínimo:</td>
+                <td>{{ producto.stock_minimo }} unidades</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">Valor Total en Inventario:</td>
+                <td style="color: #28a745; font-weight: bold;">
+                    ${% widthratio producto.precio_compra 1 producto.stock %}
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <!-- Sección: Estado y Fechas -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="border-bottom: 2px solid #333; padding-bottom: 10px;">
+            "Estado y Auditoría"
+        </h3>
+        
+        <table style="width: 100%; margin-top: 15px;">
+            <tr>
+                <td style="width: 200px; font-weight: bold;">Estado:</td>
+                <td>
+                    {% if producto.activo %}
+                        <span style="color: white; background-color: #28a745; padding: 5px 10px; border-radius: 3px;">
+                             ACTIVO
+                        </span>
+                    {% else %}
+                        <span style="color: white; background-color: #dc3545; padding: 5px 10px; border-radius: 3px;">
+                             INACTIVO
+                        </span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">Fecha de Creación:</td>
+                <td>{{ producto.fecha_creacion|date:"d/m/Y H:i" }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold;">Última Actualización:</td>
+                <td>{{ producto.fecha_actualizacion|date:"d/m/Y H:i" }}</td>
+            </tr>
+        </table>
+    </div>
+    
+    <!-- Botones de Acción -->
+    <div style="margin-top: 30px; border-top: 2px solid #333; padding-top: 20px;">
+        <a href="/admin/productos/producto/{{ producto.id }}/change/" 
+           class="btn" 
+           style="background-color: #007bff;">
+            Editar Producto
+        </a>
+        
+        <a href="{% url 'productos:lista' %}" 
+           class="btn" 
+           style="background-color: #6c757d; margin-left: 10px;">
+            Volver a la Lista
+        </a>
+    </div>
+    
+</div>
+{% endblock %}

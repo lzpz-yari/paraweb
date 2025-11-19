@@ -1,0 +1,215 @@
+{% extends 'productos/base.html' %}
+
+{% block title %}Punto de Venta - Sistema POS{% endblock %}
+
+{% block content %}
+<div style="display: flex; gap: 20px;">
+    
+    <div style="flex: 2;">
+        <h2>Seleccionar Productos</h2>
+        
+        <form method="GET" action="{% url 'productos:punto_venta' %}" style="margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input 
+                    type="text" 
+                    name="buscar" 
+                    placeholder="Buscar por nombre o código..." 
+                    value="{{ request.GET.buscar }}"
+                    style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 3px; font-size: 1em;"
+                >
+                
+                <select 
+                    name="activo" 
+                    style="padding: 10px; border: 1px solid #ddd; border-radius: 3px;"
+                    onchange="this.form.submit()"
+                >
+                    <option value="">Todos los productos</option>
+                    <option value="1" {% if request.GET.activo == "1" %}selected{% endif %}>
+                        Solo activos
+                    </option>
+                    <option value="0" {% if request.GET.activo == "0" %}selected{% endif %}>
+                        Solo inactivos
+                    </option>
+                </select>
+                
+                <button type="submit" class="btn">Buscar</button>
+                {% if request.GET %}
+                    <a href="{% url 'productos:punto_venta' %}" class="btn" style="background-color: #6c757d;">
+                        Limpiar
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+        
+        {% if not productos %}
+            <div class="alert alert-warning">
+                <strong>No se encontraron productos.</strong>
+                {% if request.GET.buscar %}
+                    Intenta con otra búsqueda.
+                {% else %}
+                    No hay productos registrados.
+                {% endif %}
+            </div>
+        {% else %}
+            <p style="color: #666;">
+                Mostrando {{ productos|length }} producto{{ productos|length|pluralize }}
+                {% if request.GET.buscar %}
+                    para "{{ request.GET.buscar }}"
+                {% endif %}
+            </p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                {% for producto in productos %}
+                <div style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; background-color: white; cursor: pointer;"
+                     onclick="agregarAlCarrito({ producto,id }, '{{ producto.nombre|escapejs }}', { producto,precio_venta })">
+                    
+                    <div style="height: 150px; display: flex; align-items: center; justify-content: center; background-color: #f9f9f9; border-radius: 3px; margin-bottom: 10px;">
+                        {% if producto.imagen %}
+                            <img src="{{ producto.imagen.url }}" 
+                                 alt="{{ producto.nombre }}"
+                                 style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                        {% else %}
+                            <span style="font-size: 3em;"></span>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <h4 style="margin: 0 0 5px 0; font-size: 0.95em; color: #333;">
+                            {{ producto.nombre }}
+                        </h4>
+                        
+                        <p style="margin: 0; font-size: 0.85em; color: #666;">
+                            Código: {{ producto.codigo_barras }}
+                        </p>
+                        
+                        <p style="margin: 10px 0; font-size: 1.3em; font-weight: bold; color: #28a745;">
+                            ${{ producto.precio_venta }}
+                        </p>
+                        
+                        <p style="margin: 0; font-size: 0.85em;">
+                            {% if producto.stock > 0 %}
+                                <span style="color: #28a745;">
+                                    Stock: {{ producto.stock }}
+                                </span>
+                            {% else %}
+                                <span style="color: #dc3545;">
+                                  Sin stock
+                                </span>
+                            {% endif %}
+                        </p>
+                        
+                        <button 
+                            onclick="event.stopPropagation(); agregarAlCarrito({ producto,id } , '{{ producto.nombre|escapejs }}', { producto,precio_venta })"
+                            class="btn"
+                            style="width: 100%; margin-top: 10px; padding: 8px; background-color: #28a745;"
+                            {% if producto.stock == 0 %}disabled{% endif %}
+                        >
+                            Agregar
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div style="flex: 1; background-color: #f9f9f9; padding: 20px; border-radius: 5px; position: sticky; top: 20px; height: fit-content;">
+        <h3> Carrito de Compra</h3>
+        
+        <div id="carrito-items" style="margin: 20px 0;">
+            <p style="text-align: center; color: #999;">
+                El carrito está vacío
+            </p>
+        </div>
+        
+        <div style="border-top: 2px solid #333; padding-top: 15px; margin-top: 15px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <strong>Total:</strong>
+                <strong style="font-size: 1.5em; color: #28a745;">
+                    $<span id="carrito-total">0.00</span>
+                </strong>
+            </div>
+            
+            <button 
+                onclick="procesarVenta()" 
+                class="btn" 
+                style="width: 100%; background-color: #007bff; font-size: 1.1em; padding: 12px;"
+                id="btn-procesar"
+                disabled
+            >
+                 Procesar Venta
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let carrito = [];
+
+function agregarAlCarrito(productoId, nombre, precio) {
+    const itemExistente = carrito.find(item => item.id === productoId);
+    
+    if (itemExistente) {
+        itemExistente.cantidad++;
+    } else {
+        carrito.push({
+            id: productoId,
+            nombre: nombre,
+            precio: precio,
+            cantidad: 1
+        });
+    }
+    
+    actualizarCarrito();
+}
+
+function actualizarCarrito() {
+    const carritoDiv = document.getElementById('carrito-items');
+    const totalSpan = document.getElementById('carrito-total');
+    const btnProcesar = document.getElementById('btn-procesar');
+    
+    if (carrito.length === 0) {
+        carritoDiv.innerHTML = '<p style="text-align: center; color: #999;">El carrito está vacío</p>';
+        totalSpan.textContent = '0.00';
+        btnProcesar.disabled = true;
+        return;
+    }
+    
+    let html = '';
+    let total = 0;
+    
+    carrito.forEach((item, index) => {
+        const subtotal = item.precio * item.cantidad;
+        total += subtotal;
+        
+        html += `
+            <div style="border-bottom: 1px solid #ddd; padding: 10px 0;">
+                <strong>${item.nombre}</strong>
+                <br>
+                <span style="font-size: 0.85em; color: #666;">
+                    $${item.precio.toFixed(2)} × ${item.cantidad}
+                </span>
+                <br>
+                <strong>$${subtotal.toFixed(2)}</strong>
+            </div>
+        `;
+    });
+    
+    carritoDiv.innerHTML = html;
+    totalSpan.textContent = total.toFixed(2);
+    btnProcesar.disabled = false;
+}
+
+function procesarVenta() {
+    if (carrito.length === 0) {
+        alert('El carrito está vacío');
+        return;
+    }
+    
+    const total = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+    alert(`Venta procesada:\n\nTotal: $${total.toFixed(2)}\nProductos: ${carrito.length}`);
+    carrito = [];
+    actualizarCarrito();
+}
+</script>
+{% endblock %}

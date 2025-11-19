@@ -1,0 +1,69 @@
+{% extends 'productos/base.html' %}
+
+{% block title %}Lista de Productos - Sistema POS{% endblock %}
+
+{% block content %}
+<h2>Lista de Productos</h2>
+
+{% if not productos %}
+    <div class="alert alert-warning">
+        <strong>¡Atención!</strong> No hay productos registrados.
+        <a href="/admin/productos/producto/add/">Agregar el primer producto</a>
+    </div>
+{% else %}
+    <p>Total de productos: <strong>{{ productos|length }}</strong></p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Código de Barras</th>
+                <th>Nombre</th>
+                <th>Precio Compra</th>
+                <th>Precio Venta</th>
+                <th>Stock</th>
+                <th>Estado</th>
+                <th>Ganancia</th>
+                <th>Acciones</th>  <!-- ← NUEVA COLUMNA -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for producto in productos %}
+            <tr>
+                <td>{{ producto.codigo_barras }}</td>
+                <td>
+                    <!-- ← AGREGAR ENLACE AL NOMBRE -->
+                    <a href="{% url 'productos:detalle' producto.id %}" 
+                       style="color: #007bff; text-decoration: none;">
+                        {{ producto.nombre }}
+                    </a>
+                </td>
+                <td>${{ producto.precio_compra }}</td>
+                <td>${{ producto.precio_venta }}</td>
+                <td>
+                    {{ producto.stock }}
+                    {% if producto.necesita_reorden %}
+                        <span style="color: red;"> Bajo</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if producto.activo %}
+                        <span style="color: green;">✓ Activo</span>
+                    {% else %}
+                        <span style="color: red;">✗ Inactivo</span>
+                    {% endif %}
+                </td>
+                <td>${{ producto.calcular_ganancia }}</td>
+                <td>
+                    <!-- ← NUEVA COLUMNA CON BOTÓN -->
+                    <a href="{% url 'productos:detalle' producto.id %}" 
+                       class="btn" 
+                       style="padding: 5px 10px; font-size: 0.9em;">
+                         Ver
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+{% endblock %}

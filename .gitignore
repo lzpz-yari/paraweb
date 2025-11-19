@@ -1,0 +1,20 @@
+# Base de datos SQLite
+db.sqlite3
+
+# Archivos Python temporales
+*.pyc
+__pycache__/
+
+# Entorno virtual
+.venv/
+venv/
+
+# Archivos de medios subidos
+media/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
