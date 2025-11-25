@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Punto de Venta{% endblock %}</title>
+    
+    <!-- CSS Minimalista -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <h1 class="nav__title">Punto de Venta - Restaurantes</h1>
+            <ul class="nav__list">
+                <li class="nav__item"><a href="/" class="nav__link">Inicio</a></li>
+                <!-- Agregar más enlaces -->
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message message--{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p class="footer__text">&copy; LowSolutions - 2025 Punto de Venta</p>
+    </footer>
+
+    <!-- JavaScript Vanilla -->
+    <script src="/static/js/main.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

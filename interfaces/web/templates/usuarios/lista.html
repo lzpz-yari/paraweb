@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Usuarios - POS Restaurante{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/usuarios.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="usuarios">
+    <div class="usuarios__header">
+        <h1 class="usuarios__title">Gestión de Usuarios</h1>
+        <a href="{% url 'usuarios:crear' %}" class="btn btn--primary">
+            + Nuevo Usuario
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="usuarios__filters">
+        <form method="get" class="filters">
+            <div class="filters__group">
+                <input 
+                    type="text" 
+                    name="busqueda" 
+                    class="filters__input" 
+                    placeholder="Buscar por email, usuario o nombre..."
+                    value="{{ busqueda }}"
+                >
+            </div>
+
+            <div class="filters__group">
+                <select name="rol_id" class="filters__select">
+                    <option value="">Todos los roles</option>
+                    {% for rol in roles %}
+                    <option value="{{ rol.id }}" {% if rol_id_filtro == rol.id|stringformat:"s" %}selected{% endif %}>
+                        {{ rol.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filters__group">
+                <select name="is_active" class="filters__select">
+                    <option value="">Todos los estados</option>
+                    <option value="true" {% if is_active_filtro == "true" %}selected{% endif %}>Activos</option>
+                    <option value="false" {% if is_active_filtro == "false" %}selected{% endif %}>Inactivos</option>
+                </select>
+            </div>
+
+            <div class="filters__group">
+                <select name="per_page" class="filters__select">
+                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10 por página</option>
+                    <option value="25" {% if per_page == 25 %}selected{% endif %}>25 por página</option>
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50 por página</option>
+                    <option value="100" {% if per_page == 100 %}selected{% endif %}>100 por página</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn--secondary">Filtrar</button>
+            <a href="{% url 'usuarios:lista' %}" class="btn btn--tertiary">Limpiar</a>
+        </form>
+    </div>
+
+    <!-- Tabla de usuarios -->
+    <div class="usuarios__table-container">
+        <table class="table">
+            <thead class="table__head">
+                <tr>
+                    <th class="table__header">ID</th>
+                    <th class="table__header">Nombre</th>
+                    <th class="table__header">Email</th>
+                    <th class="table__header">Usuario</th>
+                    <th class="table__header">Rol</th>
+                    <th class="table__header">Estado</th>
+                    <th class="table__header">Registro</th>
+                    <th class="table__header">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="table__body">
+                {% for usuario in usuarios %}
+                <tr class="table__row" data-id="{{ usuario.id }}">
+                    <td class="table__cell">{{ usuario.id }}</td>
+                    <td class="table__cell">{{ usuario.nombre_completo }}</td>
+                    <td class="table__cell">{{ usuario.email }}</td>
+                    <td class="table__cell">{{ usuario.username }}</td>
+                    <td class="table__cell">
+                        <span class="badge badge--{{ usuario.rol_nombre|lower }}">
+                            {{ usuario.rol_nombre }}
+                        </span>
+                    </td>
+                    <td class="table__cell">
+                        <span class="badge {% if usuario.is_active %}badge--success{% else %}badge--danger{% endif %}">
+                            {% if usuario.is_active %}Activo{% else %}Inactivo{% endif %}
+                        </span>
+                    </td>
+                    <td class="table__cell">{{ usuario.fecha_registro|date:"d/m/Y" }}</td>
+                    <td class="table__cell">
+                        <div class="table__actions">
+                            <a href="{% url 'usuarios:editar' usuario.id %}" class="btn btn--icon" title="Editar">
+                                ✏️
+                            </a>
+                            <button 
+                                type="button" 
+                                class="btn btn--icon btn--danger" 
+                                title="Eliminar"
+                                onclick="eliminarUsuario({{ usuario.id }}, '{{ usuario.nombre_completo }}')"
+                            >
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="table__cell table__cell--empty">
+                        No se encontraron usuarios
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        <div class="pagination__info">
+            Mostrando {{ usuarios|length }} de {{ total }} usuarios
+        </div>
+        <div class="pagination__controls">
+            {% if page > 1 %}
+            <a href="?page={{ page|add:"-1" }}&busqueda={{ busqueda }}&rol_id={{ rol_id_filtro }}&is_active={{ is_active_filtro }}&per_page={{ per_page }}" class="pagination__btn">
+                ← Anterior
+            </a>
+            {% endif %}
+
+            <span class="pagination__current">Página {{ page }} de {{ total_pages }}</span>
+
+            {% if page < total_pages %}
+            <a href="?page={{ page|add:"1" }}&busqueda={{ busqueda }}&rol_id={{ rol_id_filtro }}&is_active={{ is_active_filtro }}&per_page={{ per_page }}" class="pagination__btn">
+                Siguiente →
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/usuarios.js' %}"></script>
+{% endblock %}

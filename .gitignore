@@ -1,20 +1,85 @@
-# Base de datos SQLite
-db.sqlite3
+# ==========================================
+# Django Punto de Venta - Clean Architecture
+# ==========================================
 
-# Archivos Python temporales
+# ==========================================
+# Python
+# ==========================================
 *.pyc
+*.pyo
+*.pyd
 __pycache__/
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.Python
 
-# Entorno virtual
+# ==========================================
+# Django
+# ==========================================
+db.sqlite3
+db.sqlite3-journal
+*.log
+local_settings.py
+/static/
+/staticfiles/
+/media/
+
+# ==========================================
+# Entorno Virtual
+# ==========================================
 .venv/
 venv/
+env/
+ENV/
+env.bak/
+venv.bak/
 
-# Archivos de medios subidos
-media/
+# ==========================================
+# Variables de Entorno
+# ==========================================
+.env
+.env.local
+.env.production
 
-# Archivos del sistema
+# ==========================================
+# IDEs y Editores
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
 
-# VS Code
-.vscode/
+# ==========================================
+# Carpetas Antiguas - ELIMINADAS
+# ==========================================
+# productos/ - ELIMINADO (usar nueva estructura)
+# punto_venta/ - ELIMINADO (reemplazado por config/)
+# Usar la nueva estructura en core/, application/, infrastructure/, interfaces/
+
+# ==========================================
+# Coverage y Tests
+# ==========================================
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# ==========================================
+# Logs
+# ==========================================
+*.log
+logs/
+
+# ==========================================
+# Otros
+# ==========================================
+.github/
+
+*.md
+**/*.md

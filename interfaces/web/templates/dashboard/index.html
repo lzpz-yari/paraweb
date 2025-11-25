@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Punto de Venta{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="dashboard__header">
+        <h1 class="dashboard__title">Bienvenido, {{ usuario_nombre }}</h1>
+        <p class="dashboard__subtitle">Rol: {{ usuario_rol }}</p>
+    </div>
+
+    <div class="dashboard__cards">
+        <div class="dashboard__card">
+            <h2 class="dashboard__card-title">Usuarios</h2>
+            <p class="dashboard__card-text">Gestionar usuarios del sistema</p>
+            <a href="/usuarios/" class="btn btn--block">Ver usuarios</a>
+        </div>
+
+        <div class="dashboard__card">
+            <h2 class="dashboard__card-title">Mi Perfil</h2>
+            <p class="dashboard__card-text">Ver y editar tu información</p>
+            <a href="/perfil/" class="btn btn--block">Ver perfil</a>
+        </div>
+
+        <div class="dashboard__card">
+            <h2 class="dashboard__card-title">Cerrar Sesión</h2>
+            <p class="dashboard__card-text">Salir del sistema</p>
+            <a href="/auth/logout" class="btn btn--block btn--secondary">Cerrar sesión</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.dashboard__header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.dashboard__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-text, #0a0a0a);
+    margin: 0 0 0.5rem 0;
+}
+
+.dashboard__subtitle {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary, #737373);
+    margin: 0;
+}
+
+.dashboard__cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.dashboard__card {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 0.25rem;
+    padding: 1.5rem;
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard__card:hover {
+    border-color: #1a1a1a;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.dashboard__card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0a0a0a;
+    margin: 0 0 0.5rem 0;
+}
+
+.dashboard__card-text {
+    font-size: 0.875rem;
+    color: #737373;
+    margin: 0 0 1rem 0;
+}
+
+.btn--secondary {
+    background-color: #666666;
+    border-color: #666666;
+}
+
+.btn--secondary:hover {
+    background-color: #333333;
+    border-color: #333333;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Registro - POS Restaurante{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth">
+    <div class="auth__container">
+        <div class="auth__card">
+            <div class="auth__header">
+                <h1 class="auth__title">Crear Cuenta</h1>
+                <p class="auth__subtitle">Completa el formulario para registrarte</p>
+            </div>
+
+            <form method="post" class="auth__form" novalidate>
+                {% csrf_token %}
+                
+                <div class="form__group">
+                    <label for="nombre_completo" class="form__label">Nombre Completo *</label>
+                    <input 
+                        type="text" 
+                        id="nombre_completo" 
+                        name="nombre_completo" 
+                        class="form__input" 
+                        value="{{ nombre_completo }}"
+                        placeholder="Ej: Juan Pérez García"
+                        required
+                        autofocus
+                        minlength="3"
+                    >
+                    <span class="form__error" id="error-nombre_completo"></span>
+                </div>
+
+                <div class="form__row">
+                    <div class="form__group">
+                        <label for="email" class="form__label">Email *</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            class="form__input" 
+                            value="{{ email }}"
+                            placeholder="correo@ejemplo.com"
+                            autocomplete="email"
+                            required
+                        >
+                        <span class="form__error" id="error-email"></span>
+                    </div>
+
+                    <div class="form__group">
+                        <label for="username" class="form__label">Usuario *</label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            class="form__input" 
+                            value="{{ username }}"
+                            placeholder="usuario123"
+                            autocomplete="username"
+                            required
+                            minlength="3"
+                            pattern="[a-zA-Z0-9_]+"
+                        >
+                        <span class="form__error" id="error-username"></span>
+                    </div>
+                </div>
+
+                <div class="form__group">
+                    <label for="telefono" class="form__label">Teléfono (opcional)</label>
+                    <input 
+                        type="tel" 
+                        id="telefono" 
+                        name="telefono" 
+                        class="form__input" 
+                        value="{{ telefono }}"
+                        placeholder="5512345678"
+                        autocomplete="tel"
+                        pattern="\d{10}"
+                        maxlength="10"
+                    >
+                    <span class="form__help">10 dígitos sin espacios</span>
+                    <span class="form__error" id="error-telefono"></span>
+                </div>
+
+                <div class="form__row">
+                    <div class="form__group">
+                        <label for="password" class="form__label">Contraseña *</label>
+                        <div class="form__input-wrapper">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                class="form__input" 
+                                placeholder="Mínimo 8 caracteres"
+                                autocomplete="new-password"
+                                required
+                                minlength="8"
+                            >
+                            <button 
+                                type="button" 
+                                class="form__toggle-password" 
+                                aria-label="Mostrar contraseña"
+                                onclick="togglePassword('password')"
+                            >
+                                👁
+                            </button>
+                        </div>
+                        <div class="password-strength" id="password-strength">
+                            <div class="password-strength__bar">
+                                <div class="password-strength__fill" id="strength-fill"></div>
+                            </div>
+                            <span class="password-strength__text" id="strength-text"></span>
+                        </div>
+                        <span class="form__error" id="error-password"></span>
+                    </div>
+
+                    <div class="form__group">
+                        <label for="password_confirmacion" class="form__label">Confirmar Contraseña *</label>
+                        <div class="form__input-wrapper">
+                            <input 
+                                type="password" 
+                                id="password_confirmacion" 
+                                name="password_confirmacion" 
+                                class="form__input" 
+                                placeholder="Repite tu contraseña"
+                                autocomplete="new-password"
+                                required
+                            >
+                            <button 
+                                type="button" 
+                                class="form__toggle-password" 
+                                aria-label="Mostrar contraseña"
+                                onclick="togglePassword('password_confirmacion')"
+                            >
+                                👁
+                            </button>
+                        </div>
+                        <span class="form__error" id="error-password_confirmacion"></span>
+                    </div>
+                </div>
+
+                <div class="form__requirements">
+                    <p class="form__requirements-title">Requisitos de contraseña:</p>
+                    <ul class="form__requirements-list">
+                        <li id="req-length">✓ Mínimo 8 caracteres</li>
+                        <li id="req-upper">✓ Al menos una mayúscula</li>
+                        <li id="req-lower">✓ Al menos una minúscula</li>
+                        <li id="req-number">✓ Al menos un número</li>
+                        <li id="req-special">✓ Al menos un carácter especial</li>
+                    </ul>
+                </div>
+
+                <button type="submit" class="btn btn--primary btn--block">
+                    Crear Cuenta
+                </button>
+            </form>
+
+            <div class="auth__footer">
+                <p class="auth__footer-text">
+                    ¿Ya tienes cuenta? 
+                    <a href="{% url 'auth:login' %}" class="auth__link">Inicia sesión</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}"></script>
+<script>
+    // Validación en tiempo real y verificación de fortaleza de contraseña
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('password_confirmacion');
+        
+        // Verificar fortaleza al escribir
+        passwordInput.addEventListener('input', function() {
+            verificarFortalezaPassword(this.value);
+        });
+        
+        // Verificar coincidencia
+        confirmInput.addEventListener('input', function() {
+            if (this.value && passwordInput.value !== this.value) {
+                mostrarError('password_confirmacion', 'Las contraseñas no coinciden');
+            } else {
+                limpiarError('password_confirmacion');
+            }
+        });
+        
+        // Validación del formulario
+        document.querySelector('.auth__form').addEventListener('submit', function(e) {
+            if (!validarFormularioRegistro()) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}
