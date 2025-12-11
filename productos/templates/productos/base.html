@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Sistema de Punto de Venta{% endblock %}</title>
+    <title>{% block title %}Sistema POS{% endblock %}</title>
     
     <style>
-        /* Estilos CSS básicos (funcionales, no bonitos) */
-        
         * {
             margin: 0;
             padding: 0;
@@ -26,10 +24,34 @@
             color: white;
             padding: 20px;
             margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         header h1 {
-            margin-bottom: 10px;
+            margin: 0;
+        }
+        
+        .header-left {
+            flex: 1;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-name {
+            color: #fff;
+            font-size: 14px;
         }
         
         nav {
@@ -47,6 +69,22 @@
         
         nav a:hover {
             background-color: #777;
+        }
+        
+        .btn-logout {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-block;
+        }
+        
+        .btn-logout:hover {
+            background-color: #c82333;
         }
         
         main {
@@ -120,21 +158,47 @@
 </head>
 <body>
     <header>
-        <h1>Sistema de Punto de Venta - Oxxo</h1>
-        <nav>
-            <a href="{% url 'productos:lista' %}">Productos</a>
-            <a href="/admin/"> Administración</a>
-        </nav>
+        <div class="header-left">
+            <h1> Sistema de Punto de Venta</h1>
+            <nav>
+                <a href="{% url 'productos:lista' %}"> Productos</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'productos:punto_venta' %}"> Punto de Venta</a>
+                    {% if user.is_staff %}
+                        <a href="/admin/"> Administración</a>
+                    {% endif %}
+                {% endif %}
+            </nav>
+        </div>
+        
+        <div class="header-right">
+            {% if user.is_authenticated %}
+                <div class="user-info">
+                    <span class="user-name">
+                         {{ user.get_full_name|default:user.username }}
+                        {% if user.groups.exists %}
+                            ({{ user.groups.first.name }})
+                        {% endif %}
+                    </span>
+                    <a href="{% url 'productos:logout' %}" class="btn-logout">
+                        Cerrar Sesión
+                    </a>
+                </div>
+            {% else %}
+                <div>
+                    <a href="{% url 'productos:login' %}" class="btn" style="padding: 8px 15px;">
+                        Iniciar Sesión
+                    </a>
+                </div>
+            {% endif %}
+        </div>
     </header>
     
     <main>
         {% block content %}
-        <!-- El contenido específico de cada página irá aquí -->
         {% endblock %}
     </main>
     
-    <footer style="text-align: center; margin-top: 20px; color: #666;">
-        <p>&copy; 2024 Sistema de Punto de Venta - Desarrollado con Django</p>
     </footer>
 </body>
 </html>

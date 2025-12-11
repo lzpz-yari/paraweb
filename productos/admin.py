@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from .models import Producto, Venta, DetalleVenta
 
+
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
     list_display = [
@@ -15,6 +16,7 @@ class ProductoAdmin(admin.ModelAdmin):
         'mostrar_alerta_stock',
         'mostrar_imagen', 
     ]
+    
     list_filter = [
         'activo',
         'fecha_creacion'
@@ -25,14 +27,15 @@ class ProductoAdmin(admin.ModelAdmin):
         'nombre',
         'descripcion'
     ]
+    
     list_editable = [
         'stock',
         'activo'
     ]
+    
     list_per_page = 30
     ordering = ['nombre']
     
-    # Creación y edición de productos
     fieldsets = (
         ('Información Básica', {
             'fields': (
@@ -57,31 +60,36 @@ class ProductoAdmin(admin.ModelAdmin):
         ('Estado', {
             'fields': ('activo',),
         }),
-        ('Información de Auditoría', {
+        ('Auditoría', {
             'fields': (
                 'fecha_creacion',
                 'fecha_actualizacion',
+                'mostrar_miniatura',
             ),
             'classes': ('collapse',), 
         }),
     )
 
-    readonly_fields = ['fecha_creacion', 'fecha_actualizacion', 'mostrar_miniatura'] 
+    readonly_fields = [
+        'fecha_creacion',
+        'fecha_actualizacion',
+        'mostrar_miniatura'
+    ]
 
-    @admin.display(description='Ganancia por unidad', ordering='precio_venta')
+    @admin.display(description='Ganancia', ordering='precio_venta')
     def mostrar_ganancia(self, obj):
         ganancia = obj.calcular_ganancia()
         return f"${ganancia:.2f}"
 
-    @admin.display(description='Alerta stock', boolean=True)
+    @admin.display(description='Stock OK', boolean=True)
     def mostrar_alerta_stock(self, obj):
         return not obj.necesita_reordenar()
 
     @admin.display(description='Imagen')
     def mostrar_imagen(self, obj):
         if obj.imagen:
-            return "Sí"
-        return "No"
+            return "📷 Sí"
+        return "❌ No"
     
     @admin.display(description='Miniatura')
     def mostrar_miniatura(self, obj):
@@ -94,15 +102,15 @@ class ProductoAdmin(admin.ModelAdmin):
     
     actions = ['marcar_como_inactivo', 'marcar_como_activo']
     
-    @admin.action(description='Marcar productos como inactivos')
+    @admin.action(description='Marcar como inactivos')
     def marcar_como_inactivo(self, request, queryset):
         updated = queryset.update(activo=False)
-        self.message_user(request, f'{updated} producto(s) marcado(s) como inactivos.') 
+        self.message_user(request, f'{updated} producto(s) inactivo(s).') 
     
-    @admin.action(description='Marcar productos como activos')
+    @admin.action(description='Marcar como activos')
     def marcar_como_activo(self, request, queryset):
         updated = queryset.update(activo=True)
-        self.message_user(request, f'{updated} producto(s) marcado(s) como activos.')
+        self.message_user(request, f'{updated} producto(s) activo(s).')
 
 
 class DetalleVentaInline(admin.TabularInline):
@@ -121,6 +129,7 @@ class DetalleVentaInline(admin.TabularInline):
 @admin.register(Venta)
 class VentaAdmin(admin.ModelAdmin):
     inlines = [DetalleVentaInline]
+    
     list_display = [
         'id', 
         'fecha', 
@@ -128,20 +137,24 @@ class VentaAdmin(admin.ModelAdmin):
         'estado',
         'cantidad_items', 
         'cantidad_productos',
+        'ver_ticket',
     ]
+    
     list_filter = [
         'estado', 
         'fecha',
     ]
+    
     search_fields = [
         'id',
         'notas',
     ]
+    
     list_per_page = 25
     ordering = ['-fecha']
 
     fieldsets = (
-        ('Información de la Venta', {
+        ('Información', {
             'fields': (
                 'fecha',
                 'estado', 
@@ -169,15 +182,24 @@ class VentaAdmin(admin.ModelAdmin):
     
     actions = ['marcar_completada', 'marcar_cancelada']
 
-    @admin.action(description='Marcar ventas como completadas')
+    @admin.action(description='Marcar completadas')
     def marcar_completada(self, request, queryset):
         updated = queryset.update(estado='completada')
-        self.message_user(request, f'{updated} venta(s) marcada(s) como completadas.')
+        self.message_user(request, f'{updated} venta(s) completada(s).')
 
-    @admin.action(description='Marcar ventas como canceladas')
+    @admin.action(description='Marcar canceladas')
     def marcar_cancelada(self, request, queryset):
         updated = queryset.update(estado='cancelada')
-        self.message_user(request, f'{updated} venta(s) marcada(s) como canceladas.')
+        self.message_user(request, f'{updated} venta(s) cancelada(s).')
+
+    @admin.display(description='Ticket')
+    def ver_ticket(self, obj):
+        from django.urls import reverse
+        url = reverse('productos:ticket_venta', args=[obj.id])
+        return format_html(
+            '<a href="{}" target="_blank">🎫 Ver</a>',
+            url
+        )
 
 
 @admin.register(DetalleVenta)

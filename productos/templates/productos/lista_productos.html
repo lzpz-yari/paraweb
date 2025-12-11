@@ -23,7 +23,7 @@
                 <th>Stock</th>
                 <th>Estado</th>
                 <th>Ganancia</th>
-                <th>Acciones</th>  <!-- ← NUEVA COLUMNA -->
+                <th>Acciones</th>  
             </tr>
         </thead>
         <tbody>
@@ -31,7 +31,7 @@
             <tr>
                 <td>{{ producto.codigo_barras }}</td>
                 <td>
-                    <!-- ← AGREGAR ENLACE AL NOMBRE -->
+                    
                     <a href="{% url 'productos:detalle' producto.id %}" 
                        style="color: #007bff; text-decoration: none;">
                         {{ producto.nombre }}
@@ -47,14 +47,14 @@
                 </td>
                 <td>
                     {% if producto.activo %}
-                        <span style="color: green;">✓ Activo</span>
+                        <span style="color: green;"> Activo</span>
                     {% else %}
-                        <span style="color: red;">✗ Inactivo</span>
+                        <span style="color: red;"> Inactivo</span>
                     {% endif %}
                 </td>
                 <td>${{ producto.calcular_ganancia }}</td>
                 <td>
-                    <!-- ← NUEVA COLUMNA CON BOTÓN -->
+                    
                     <a href="{% url 'productos:detalle' producto.id %}" 
                        class="btn" 
                        style="padding: 5px 10px; font-size: 0.9em;">

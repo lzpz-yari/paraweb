@@ -1,19 +1,19 @@
 {% extends 'productos/base.html' %}
 
-{% block title %}Punto de Venta - Sistema POS{% endblock %}
+{% block title %}Punto de Venta - Sistema Wicho{% endblock %}
 
 {% block content %}
 <div style="display: flex; gap: 20px;">
     
     <div style="flex: 2;">
-        <h2>Seleccionar Productos</h2>
+        <h2> Seleccionar Productos</h2>
         
         <form method="GET" action="{% url 'productos:punto_venta' %}" style="margin-bottom: 20px;">
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <input 
                     type="text" 
                     name="buscar" 
-                    placeholder="Buscar por nombre o código..." 
+                    placeholder=" Buscar por nombre o código..." 
                     value="{{ request.GET.buscar }}"
                     style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 3px; font-size: 1em;"
                 >
@@ -45,9 +45,9 @@
             <div class="alert alert-warning">
                 <strong>No se encontraron productos.</strong>
                 {% if request.GET.buscar %}
-                    Intenta con otra búsqueda.
+                    Intenta de otra forma...
                 {% else %}
-                    No hay productos registrados.
+                    No hay productos registrados...
                 {% endif %}
             </div>
         {% else %}
@@ -60,8 +60,7 @@
             
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
                 {% for producto in productos %}
-                <div style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; background-color: white; cursor: pointer;"
-                     onclick="agregarAlCarrito({ producto,id }, '{{ producto.nombre|escapejs }}', { producto,precio_venta })">
+                <div style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; background-color: white;">
                     
                     <div style="height: 150px; display: flex; align-items: center; justify-content: center; background-color: #f9f9f9; border-radius: 3px; margin-bottom: 10px;">
                         {% if producto.imagen %}
@@ -69,7 +68,7 @@
                                  alt="{{ producto.nombre }}"
                                  style="max-width: 100%; max-height: 100%; object-fit: contain;">
                         {% else %}
-                            <span style="font-size: 3em;"></span>
+                            <span style="font-size: 3em;">NO imagen</span>
                         {% endif %}
                     </div>
                     
@@ -89,22 +88,22 @@
                         <p style="margin: 0; font-size: 0.85em;">
                             {% if producto.stock > 0 %}
                                 <span style="color: #28a745;">
-                                    Stock: {{ producto.stock }}
+                                     Stock: {{ producto.stock }}
                                 </span>
                             {% else %}
                                 <span style="color: #dc3545;">
-                                  Sin stock
+                                     Sin stock
                                 </span>
                             {% endif %}
                         </p>
                         
                         <button 
-                            onclick="event.stopPropagation(); agregarAlCarrito({ producto,id } , '{{ producto.nombre|escapejs }}', { producto,precio_venta })"
+                            onclick="agregarAlCarrito({{ producto.id }}, '{{ producto.nombre|escapejs }}', {{ producto.precio_venta }})"
                             class="btn"
                             style="width: 100%; margin-top: 10px; padding: 8px; background-color: #28a745;"
                             {% if producto.stock == 0 %}disabled{% endif %}
                         >
-                            Agregar
+                             Agregar
                         </button>
                     </div>
                 </div>
@@ -139,6 +138,16 @@
             >
                  Procesar Venta
             </button>
+            
+            <button 
+                onclick="limpiarCarrito()" 
+                class="btn" 
+                style="width: 100%; background-color: #dc3545; margin-top: 10px;"
+                id="btn-limpiar"
+                disabled
+            >
+                 Limpiar Carrito
+            </button>
         </div>
     </div>
 </div>
@@ -146,7 +155,26 @@
 <script>
 let carrito = [];
 
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
 function agregarAlCarrito(productoId, nombre, precio) {
+    console.log('Agregando:', productoId, nombre, precio);
+    
     const itemExistente = carrito.find(item => item.id === productoId);
     
     if (itemExistente) {
@@ -161,17 +189,20 @@ function agregarAlCarrito(productoId, nombre, precio) {
     }
     
     actualizarCarrito();
+    mostrarNotificacion(' * ' + nombre + ' agregado', 'success');
 }
 
 function actualizarCarrito() {
     const carritoDiv = document.getElementById('carrito-items');
     const totalSpan = document.getElementById('carrito-total');
     const btnProcesar = document.getElementById('btn-procesar');
+    const btnLimpiar = document.getElementById('btn-limpiar');
     
     if (carrito.length === 0) {
         carritoDiv.innerHTML = '<p style="text-align: center; color: #999;">El carrito está vacío</p>';
         totalSpan.textContent = '0.00';
         btnProcesar.disabled = true;
+        btnLimpiar.disabled = true;
         return;
     }
     
@@ -183,14 +214,23 @@ function actualizarCarrito() {
         total += subtotal;
         
         html += `
-            <div style="border-bottom: 1px solid #ddd; padding: 10px 0;">
-                <strong>${item.nombre}</strong>
-                <br>
-                <span style="font-size: 0.85em; color: #666;">
-                    $${item.precio.toFixed(2)} × ${item.cantidad}
-                </span>
-                <br>
-                <strong>$${subtotal.toFixed(2)}</strong>
+            <div style="border-bottom: 1px solid #ddd; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
+                <div style="flex: 1;">
+                    <strong style="font-size: 0.9em;">${item.nombre}</strong>
+                    <br>
+                    <span style="font-size: 0.85em; color: #666;">
+                        $${item.precio.toFixed(2)} × ${item.cantidad}
+                    </span>
+                </div>
+                <div style="display: flex; gap: 5px; align-items: center;">
+                    <button onclick="cambiarCantidad(${index}, -1)" style="padding: 2px 8px; background-color: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">-</button>
+                    <span style="margin: 0 5px;">${item.cantidad}</span>
+                    <button onclick="cambiarCantidad(${index}, 1)" style="padding: 2px 8px; background-color: #28a745; color: white; border: none; border-radius: 3px; cursor: pointer;">+</button>
+                    <button onclick="eliminarItem(${index})" style="padding: 2px 8px; background-color: #6c757d; color: white; border: none; border-radius: 3px; cursor: pointer; margin-left: 5px;"> X </button>
+                </div>
+                <div style="text-align: right; min-width: 70px; margin-left: 10px;">
+                    <strong>$${subtotal.toFixed(2)}</strong>
+                </div>
             </div>
         `;
     });
@@ -198,18 +238,140 @@ function actualizarCarrito() {
     carritoDiv.innerHTML = html;
     totalSpan.textContent = total.toFixed(2);
     btnProcesar.disabled = false;
+    btnLimpiar.disabled = false;
 }
 
-function procesarVenta() {
+function cambiarCantidad(index, cambio) {
+    carrito[index].cantidad += cambio;
+    
+    if (carrito[index].cantidad <= 0) {
+        carrito.splice(index, 1);
+    }
+    
+    actualizarCarrito();
+}
+
+function eliminarItem(index) {
+    carrito.splice(index, 1);
+    actualizarCarrito();
+}
+
+function limpiarCarrito() {
+    if (confirm('¿Estás seguro de limpiar el carrito?')) {
+        carrito = [];
+        actualizarCarrito();
+        mostrarNotificacion('Carrito limpiado', 'info');
+    }
+}
+
+async function procesarVenta() {
     if (carrito.length === 0) {
-        alert('El carrito está vacío');
+        mostrarNotificacion('El carrito está vacío', 'error');
         return;
     }
     
-    const total = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
-    alert(`Venta procesada:\n\nTotal: $${total.toFixed(2)}\nProductos: ${carrito.length}`);
-    carrito = [];
-    actualizarCarrito();
+    const btnProcesar = document.getElementById('btn-procesar');
+    btnProcesar.disabled = true;
+    btnProcesar.textContent = '* Procesando...';
+    
+    try {
+        const datos = {
+            items: carrito.map(item => ({
+                producto_id: item.id,
+                cantidad: item.cantidad,
+                precio_unitario: item.precio
+            }))
+        };
+        
+        const response = await fetch('{% url "productos:procesar_venta" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(datos)
+        });
+        
+        const resultado = await response.json();
+        
+        if (response.ok) {
+            mostrarNotificacion('* Venta procesada exitosamente', 'success');
+            mostrarResumenVenta(resultado);
+            carrito = [];
+            actualizarCarrito();
+        } else {
+            mostrarNotificacion('Error: ' + resultado.error, 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('Error de conexión', 'error');
+    } finally {
+        btnProcesar.disabled = false;
+        btnProcesar.textContent = ' Procesar Venta';
+    }
 }
+
+function mostrarResumenVenta(resultado) {
+    const mensaje = ` VENTA PROCESADA\n\nID de Venta: #${resultado.venta_id}\nTotal: $${resultado.total}\nProductos: ${resultado.cantidad_items} items\nFecha: ${resultado.fecha}`;
+    alert(mensaje);
+}
+
+function mostrarNotificacion(mensaje, tipo) {
+    const notif = document.createElement('div');
+    notif.textContent = mensaje;
+    
+    const colores = {
+        'success': '#28a745',
+        'error': '#dc3545',
+        'info': '#17a2b8'
+    };
+    
+    notif.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: ${colores[tipo] || '#333'};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 5px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 9999;
+        animation: slideIn 0.3s ease;
+    `;
+    
+    document.body.appendChild(notif);
+    
+    setTimeout(() => {
+        notif.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notif.remove(), 300);
+    }, 3000);
+}
+
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
 </script>
 {% endblock %}
