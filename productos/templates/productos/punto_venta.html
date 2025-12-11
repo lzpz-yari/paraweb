@@ -314,7 +314,10 @@ async function procesarVenta() {
 
 function mostrarResumenVenta(resultado) {
     const mensaje = ` VENTA PROCESADA\n\nID de Venta: #${resultado.venta_id}\nTotal: $${resultado.total}\nProductos: ${resultado.cantidad_items} items\nFecha: ${resultado.fecha}`;
-    alert(mensaje);
+    
+    if (confirm(mensaje + '\n\n¿Deseas ver el ticket de venta?')) {
+        window.open(`/productos/venta/${resultado.venta_id}/ticket/`, '_blank');
+    }
 }
 
 function mostrarNotificacion(mensaje, tipo) {

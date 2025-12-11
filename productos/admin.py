@@ -88,8 +88,8 @@ class ProductoAdmin(admin.ModelAdmin):
     @admin.display(description='Imagen')
     def mostrar_imagen(self, obj):
         if obj.imagen:
-            return "📷 Sí"
-        return "❌ No"
+            return " Sí"
+        return " No"
     
     @admin.display(description='Miniatura')
     def mostrar_miniatura(self, obj):
@@ -197,9 +197,8 @@ class VentaAdmin(admin.ModelAdmin):
         from django.urls import reverse
         url = reverse('productos:ticket_venta', args=[obj.id])
         return format_html(
-            '<a href="{}" target="_blank">🎫 Ver</a>',
-            url
-        )
+        '<a href="{}"> Ver </a>',
+        url )
 
 
 @admin.register(DetalleVenta)
