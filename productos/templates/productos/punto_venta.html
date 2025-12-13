@@ -1,28 +1,31 @@
 {% extends 'productos/base.html' %}
+{% load static %}
 
-{% block title %}Punto de Venta - Sistema Wicho{% endblock %}
+{% block title %}Punto de Venta - Sistema POS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pos.css' %}">
+{% endblock %}
 
 {% block content %}
-<div style="display: flex; gap: 20px;">
+<div class="pos-container">
     
-    <div style="flex: 2;">
+    <!-- SECCIÓN DE PRODUCTOS -->
+    <div class="productos-section">
         <h2> Seleccionar Productos</h2>
         
-        <form method="GET" action="{% url 'productos:punto_venta' %}" style="margin-bottom: 20px;">
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <!-- FORMULARIO DE BÚSQUEDA -->
+        <form method="GET" action="{% url 'productos:punto_venta' %}" class="search-form">
+            <div class="search-controls">
                 <input 
                     type="text" 
                     name="buscar" 
                     placeholder=" Buscar por nombre o código..." 
                     value="{{ request.GET.buscar }}"
-                    style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 3px; font-size: 1em;"
+                    class="search-input"
                 >
                 
-                <select 
-                    name="activo" 
-                    style="padding: 10px; border: 1px solid #ddd; border-radius: 3px;"
-                    onchange="this.form.submit()"
-                >
+                <select name="activo" class="filter-select" onchange="this.form.submit()">
                     <option value="">Todos los productos</option>
                     <option value="1" {% if request.GET.activo == "1" %}selected{% endif %}>
                         Solo activos
@@ -34,64 +37,55 @@
                 
                 <button type="submit" class="btn">Buscar</button>
                 {% if request.GET %}
-                    <a href="{% url 'productos:punto_venta' %}" class="btn" style="background-color: #6c757d;">
+                    <a href="{% url 'productos:punto_venta' %}" class="btn btn-secondary">
                         Limpiar
                     </a>
                 {% endif %}
             </div>
         </form>
         
+        <!-- MENSAJES -->
         {% if not productos %}
             <div class="alert alert-warning">
-                <strong>No se encontraron productos.</strong>
+                <strong> No se encontraron productos.</strong>
                 {% if request.GET.buscar %}
-                    Intenta de otra forma...
+                    Intenta con otro término de búsqueda.
                 {% else %}
-                    No hay productos registrados...
+                    No hay productos registrados.
                 {% endif %}
             </div>
         {% else %}
-            <p style="color: #666;">
+            <p style="color: #666; margin-bottom: 20px;">
                 Mostrando {{ productos|length }} producto{{ productos|length|pluralize }}
                 {% if request.GET.buscar %}
                     para "{{ request.GET.buscar }}"
                 {% endif %}
             </p>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+            <!-- GRID DE PRODUCTOS -->
+            <div class="productos-grid">
                 {% for producto in productos %}
-                <div style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; background-color: white;">
-                    
-                    <div style="height: 150px; display: flex; align-items: center; justify-content: center; background-color: #f9f9f9; border-radius: 3px; margin-bottom: 10px;">
+                <div class="producto-card">
+                    <div class="producto-imagen">
                         {% if producto.imagen %}
-                            <img src="{{ producto.imagen.url }}" 
-                                 alt="{{ producto.nombre }}"
-                                 style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
                         {% else %}
-                            <span style="font-size: 3em;">NO imagen</span>
+                            <span class="producto-imagen-placeholder">SIN IMAGEN</span>
                         {% endif %}
                     </div>
                     
-                    <div>
-                        <h4 style="margin: 0 0 5px 0; font-size: 0.95em; color: #333;">
-                            {{ producto.nombre }}
-                        </h4>
+                    <div class="producto-info">
+                        <h4 class="producto-nombre">{{ producto.nombre }}</h4>
+                        <p class="producto-codigo">Código: {{ producto.codigo_barras }}</p>
+                        <p class="producto-precio">${{ producto.precio_venta }}</p>
                         
-                        <p style="margin: 0; font-size: 0.85em; color: #666;">
-                            Código: {{ producto.codigo_barras }}
-                        </p>
-                        
-                        <p style="margin: 10px 0; font-size: 1.3em; font-weight: bold; color: #28a745;">
-                            ${{ producto.precio_venta }}
-                        </p>
-                        
-                        <p style="margin: 0; font-size: 0.85em;">
+                        <p class="producto-stock">
                             {% if producto.stock > 0 %}
-                                <span style="color: #28a745;">
+                                <span class="stock-disponible">
                                      Stock: {{ producto.stock }}
                                 </span>
                             {% else %}
-                                <span style="color: #dc3545;">
+                                <span class="stock-agotado">
                                      Sin stock
                                 </span>
                             {% endif %}
@@ -99,8 +93,7 @@
                         
                         <button 
                             onclick="agregarAlCarrito({{ producto.id }}, '{{ producto.nombre|escapejs }}', {{ producto.precio_venta }})"
-                            class="btn"
-                            style="width: 100%; margin-top: 10px; padding: 8px; background-color: #28a745;"
+                            class="btn btn-agregar"
                             {% if producto.stock == 0 %}disabled{% endif %}
                         >
                              Agregar
@@ -112,46 +105,49 @@
         {% endif %}
     </div>
     
-    <div style="flex: 1; background-color: #f9f9f9; padding: 20px; border-radius: 5px; position: sticky; top: 20px; height: fit-content;">
-        <h3> Carrito de Compra</h3>
-        
-        <div id="carrito-items" style="margin: 20px 0;">
-            <p style="text-align: center; color: #999;">
-                El carrito está vacío
-            </p>
-        </div>
-        
-        <div style="border-top: 2px solid #333; padding-top: 15px; margin-top: 15px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                <strong>Total:</strong>
-                <strong style="font-size: 1.5em; color: #28a745;">
-                    $<span id="carrito-total">0.00</span>
-                </strong>
+    <!-- SECCIÓN DEL CARRITO -->
+    <div class="carrito-section">
+        <div class="carrito-sidebar">
+            <h3 class="carrito-titulo"> Carrito de Compra</h3>
+            
+            <div id="carrito-items" class="carrito-items">
+                <div class="carrito-vacio">
+                    El carrito está vacío
+                </div>
             </div>
             
-            <button 
-                onclick="procesarVenta()" 
-                class="btn" 
-                style="width: 100%; background-color: #007bff; font-size: 1.1em; padding: 12px;"
-                id="btn-procesar"
-                disabled
-            >
-                 Procesar Venta
-            </button>
-            
-            <button 
-                onclick="limpiarCarrito()" 
-                class="btn" 
-                style="width: 100%; background-color: #dc3545; margin-top: 10px;"
-                id="btn-limpiar"
-                disabled
-            >
-                 Limpiar Carrito
-            </button>
+            <div class="carrito-footer">
+                <div class="carrito-total">
+                    <strong>Total:</strong>
+                    <span class="carrito-total-monto">
+                        $<span id="carrito-total">0.00</span>
+                    </span>
+                </div>
+                
+                <button 
+                    onclick="procesarVenta()" 
+                    class="btn btn-procesar"
+                    id="btn-procesar"
+                    disabled
+                >
+                     Procesar Venta
+                </button>
+                
+                <button 
+                    onclick="limpiarCarrito()" 
+                    class="btn btn-limpiar"
+                    id="btn-limpiar"
+                    disabled
+                >
+                     Limpiar Carrito
+                </button>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
 let carrito = [];
 
@@ -171,10 +167,32 @@ function getCookie(name) {
 }
 
 const csrftoken = getCookie('csrftoken');
+function validateSaleData(items) {
+    const errors = [];
+    
+    if (!Array.isArray(items) || items.length === 0) {
+        errors.push('El carrito está vacío');
+        return errors;
+    }
+    
+    items.forEach((item, index) => {
+        if (!item.producto_id) {
+            errors.push('Item ' + (index + 1) + ': ID de producto faltante');
+        }
+        
+        if (!item.cantidad || item.cantidad <= 0) {
+            errors.push('Item ' + (index + 1) + ': Cantidad inválida');
+        }
+        
+        if (!item.precio_unitario || item.precio_unitario <= 0) {
+            errors.push('Item ' + (index + 1) + ': Precio inválido');
+        }
+    });
+    
+    return errors;
+}
 
 function agregarAlCarrito(productoId, nombre, precio) {
-    console.log('Agregando:', productoId, nombre, precio);
-    
     const itemExistente = carrito.find(item => item.id === productoId);
     
     if (itemExistente) {
@@ -189,7 +207,7 @@ function agregarAlCarrito(productoId, nombre, precio) {
     }
     
     actualizarCarrito();
-    mostrarNotificacion(' * ' + nombre + ' agregado', 'success');
+    mostrarNotificacion( nombre + ' agregado', 'success');
 }
 
 function actualizarCarrito() {
@@ -199,7 +217,7 @@ function actualizarCarrito() {
     const btnLimpiar = document.getElementById('btn-limpiar');
     
     if (carrito.length === 0) {
-        carritoDiv.innerHTML = '<p style="text-align: center; color: #999;">El carrito está vacío</p>';
+        carritoDiv.innerHTML = '<div class="carrito-vacio">El carrito está vacío</div>';
         totalSpan.textContent = '0.00';
         btnProcesar.disabled = true;
         btnLimpiar.disabled = true;
@@ -214,22 +232,21 @@ function actualizarCarrito() {
         total += subtotal;
         
         html += `
-            <div style="border-bottom: 1px solid #ddd; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
-                <div style="flex: 1;">
-                    <strong style="font-size: 0.9em;">${item.nombre}</strong>
-                    <br>
-                    <span style="font-size: 0.85em; color: #666;">
+            <div class="carrito-item">
+                <div class="carrito-item-info">
+                    <div class="carrito-item-nombre">${item.nombre}</div>
+                    <div class="carrito-item-detalles">
                         $${item.precio.toFixed(2)} × ${item.cantidad}
-                    </span>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 5px; align-items: center;">
-                    <button onclick="cambiarCantidad(${index}, -1)" style="padding: 2px 8px; background-color: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">-</button>
+                <div class="carrito-item-controles">
+                    <button onclick="cambiarCantidad(${index}, -1)" class="btn-cantidad btn-cantidad-menos">-</button>
                     <span style="margin: 0 5px;">${item.cantidad}</span>
-                    <button onclick="cambiarCantidad(${index}, 1)" style="padding: 2px 8px; background-color: #28a745; color: white; border: none; border-radius: 3px; cursor: pointer;">+</button>
-                    <button onclick="eliminarItem(${index})" style="padding: 2px 8px; background-color: #6c757d; color: white; border: none; border-radius: 3px; cursor: pointer; margin-left: 5px;"> X </button>
+                    <button onclick="cambiarCantidad(${index}, 1)" class="btn-cantidad btn-cantidad-mas">+</button>
+                    <button onclick="eliminarItem(${index})" class="btn-eliminar"> X </button>
                 </div>
-                <div style="text-align: right; min-width: 70px; margin-left: 10px;">
-                    <strong>$${subtotal.toFixed(2)}</strong>
+                <div class="carrito-item-subtotal">
+                    $${subtotal.toFixed(2)}
                 </div>
             </div>
         `;
@@ -260,7 +277,7 @@ function limpiarCarrito() {
     if (confirm('¿Estás seguro de limpiar el carrito?')) {
         carrito = [];
         actualizarCarrito();
-        mostrarNotificacion('Carrito limpiado', 'info');
+        mostrarNotificacion(' Carrito limpiado', 'info');
     }
 }
 
@@ -270,20 +287,29 @@ async function procesarVenta() {
         return;
     }
     
+    const datos = {
+        items: carrito.map(item => ({
+            producto_id: item.id,
+            cantidad: item.cantidad,
+            precio_unitario: item.precio
+        }))
+    };
+    
+    // Validar datos del lado del cliente
+    const errors = validateSaleData(datos.items);
+    if (errors.length > 0) {
+        mostrarNotificacion('Error: ' + errors.join(', '), 'error');
+        return;
+    }
+    
     const btnProcesar = document.getElementById('btn-procesar');
     btnProcesar.disabled = true;
-    btnProcesar.textContent = '* Procesando...';
+    btnProcesar.textContent = 'Procesando...';
     
     try {
-        const datos = {
-            items: carrito.map(item => ({
-                producto_id: item.id,
-                cantidad: item.cantidad,
-                precio_unitario: item.precio
-            }))
-        };
+        const urlProcesar = "{% url 'productos:procesar_venta' %}";
         
-        const response = await fetch('{% url "productos:procesar_venta" %}', {
+        const response = await fetch(urlProcesar, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -295,53 +321,43 @@ async function procesarVenta() {
         const resultado = await response.json();
         
         if (response.ok) {
-            mostrarNotificacion('* Venta procesada exitosamente', 'success');
-            mostrarResumenVenta(resultado);
+            mostrarNotificacion('Venta procesada exitosamente', 'success');
             carrito = [];
             actualizarCarrito();
+            mostrarResumenVenta(resultado);
         } else {
             mostrarNotificacion('Error: ' + resultado.error, 'error');
         }
         
     } catch (error) {
         console.error('Error:', error);
-        mostrarNotificacion('Error de conexión', 'error');
+        mostrarNotificacion('Error de conexión con el servidor', 'error');
     } finally {
         btnProcesar.disabled = false;
-        btnProcesar.textContent = ' Procesar Venta';
+        btnProcesar.textContent = 'Procesar Venta';
     }
 }
 
 function mostrarResumenVenta(resultado) {
-    const mensaje = ` VENTA PROCESADA\n\nID de Venta: #${resultado.venta_id}\nTotal: $${resultado.total}\nProductos: ${resultado.cantidad_items} items\nFecha: ${resultado.fecha}`;
+    const mensaje = `Venta procesada exitosamente
+
+ID de Venta: #${resultado.venta_id}
+Total: $${resultado.total}
+Productos: ${resultado.cantidad_items} items
+Fecha: ${resultado.fecha}`;
     
-    if (confirm(mensaje + '\n\n¿Deseas ver el ticket de venta?')) {
-        window.open(`/productos/venta/${resultado.venta_id}/ticket/`, '_blank');
+    alert(mensaje);
+    
+    if (confirm('¿Deseas ver el ticket de venta para imprimir?')) {
+        
+        window.location.href = '/productos/venta/' + resultado.venta_id + '/ticket/';
     }
 }
 
 function mostrarNotificacion(mensaje, tipo) {
     const notif = document.createElement('div');
     notif.textContent = mensaje;
-    
-    const colores = {
-        'success': '#28a745',
-        'error': '#dc3545',
-        'info': '#17a2b8'
-    };
-    
-    notif.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background-color: ${colores[tipo] || '#333'};
-        color: white;
-        padding: 15px 20px;
-        border-radius: 5px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        z-index: 9999;
-        animation: slideIn 0.3s ease;
-    `;
+    notif.className = 'notificacion notificacion-' + tipo;
     
     document.body.appendChild(notif);
     
@@ -350,31 +366,5 @@ function mostrarNotificacion(mensaje, tipo) {
         setTimeout(() => notif.remove(), 300);
     }, 3000);
 }
-
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(400px);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes slideOut {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(400px);
-            opacity: 0;
-        }
-    }
-`;
-document.head.appendChild(style);
 </script>
 {% endblock %}

@@ -25,6 +25,10 @@ urlpatterns = [
     path('productos/', include('productos.urls')),
     path('', RedirectView.as_view(url='/productos/login/', permanent=False)),
 ]
-
 if settings.DEBUG:
+    # Archivos estáticos (CSS, JS, imágenes del proyecto)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+    
+    # Archivos media (uploads de usuarios - imágenes de productos)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    
