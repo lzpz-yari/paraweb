@@ -10,7 +10,7 @@ from .image_utils import (
 
 
 class CustomLoginForm(AuthenticationForm):
-    """Formulario de login con validaciones"""
+    """Formulario de login simplificado"""
     
     username = forms.CharField(
         max_length=150,
@@ -39,23 +39,6 @@ class CustomLoginForm(AuthenticationForm):
             'required': 'La contraseña es obligatoria'
         }
     )
-    
-    def clean_username(self):
-        username = self.cleaned_data.get('username')
-        if not username:
-            raise ValidationError('El nombre de usuario es obligatorio')
-        username = username.strip()
-        if len(username) < 3:
-            raise ValidationError('El nombre de usuario debe tener al menos 3 caracteres')
-        return username
-    
-    def clean_password(self):
-        password = self.cleaned_data.get('password')
-        if not password:
-            raise ValidationError('La contraseña es obligatoria')
-        if len(password) < 6:
-            raise ValidationError('La contraseña debe tener al menos 6 caracteres')
-        return password
 
 
 class BusquedaProductoForm(forms.Form):
@@ -188,4 +171,3 @@ class ProductoForm(forms.ModelForm):
                 )
         
         return cleaned_data
-        

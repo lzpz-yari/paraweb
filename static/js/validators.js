@@ -234,25 +234,34 @@ function initLoginValidation() {
     const form = document.getElementById('login-form');
     if (!form) return;
     
+    let isValidated = false;
+    
     form.addEventListener('submit', function(e) {
+        
+        if (isValidated) {
+            return true;
+        }
+        
         e.preventDefault();
         
+        // Validar formulario
         if (!validator.validateForm()) {
             showAlert('Por favor, corrija los errores en el formulario', 'error');
             return false;
         }
         
-        // Deshabilitar botón de envío
+        isValidated = true;
+        
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.classList.add('loading');
+            submitBtn.textContent = 'Iniciando...';
         }
         
-        // Enviar formulario
         form.submit();
     });
 }
+
 // VALIDACIÓN DE PUNTO DE VENTA
 
 function validateCartItem(productoId, cantidad, stock) {

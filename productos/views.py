@@ -7,8 +7,9 @@ from django.db import transaction
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncDate, TruncWeek, TruncMonth, TruncYear
 from django.utils import timezone
-from .models import Producto, Venta, DetalleVenta
-from .forms import CustomLoginForm, BusquedaProductoForm
+from .models import Producto, Venta, DetalleVenta 
+from django.contrib.auth.forms import AuthenticationForm
+from .forms import BusquedaProductoForm
 from django.db.models import Q
 from decimal import Decimal
 import json
@@ -34,10 +35,14 @@ def detalle_producto(request, producto_id):
 
 @login_required
 def punto_venta(request):
-    """Punto de venta con validaciones"""
+    """Punto de venta optimizado"""
     form = BusquedaProductoForm(request.GET or None)
     
-    productos = Producto.objects.filter(activo=True)
+    
+    productos = Producto.objects.filter(activo=True).only(
+        'id', 'nombre', 'codigo_barras', 'precio_venta', 
+        'stock', 'imagen', 'imagen_thumbnail'
+    )
     
     if form.is_valid():
         buscar = form.cleaned_data.get('buscar')
@@ -54,13 +59,13 @@ def punto_venta(request):
         elif activo == '0':
             productos = productos.filter(activo=False)
     
-    productos = productos.order_by('-activo', 'nombre')
+    
+    productos = productos.order_by('-activo', 'nombre')[:50]  
     
     return render(request, 'productos/punto_venta.html', {
         'productos': productos,
         'form': form
     })
-
 
 @login_required
 @require_POST
@@ -247,35 +252,25 @@ def reportes_ventas(request):
 
 
 def login_view(request):
-    """Vista de login con validaciones"""
+    """Vista de login"""
     if request.user.is_authenticated:
-        if request.user.is_staff:
-            return redirect('/admin/')
         return redirect('productos:punto_venta')
     
     if request.method == 'POST':
-        form = CustomLoginForm(request, data=request.POST)
+        form = AuthenticationForm(request, data=request.POST)
         
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            
             user = authenticate(request, username=username, password=password)
             
             if user is not None:
                 auth_login(request, user)
-                
-                if user.is_staff:
-                    return redirect('productos:punto_venta')
-            else:
-                form.add_error(None, 'Usuario o contraseña incorrectos')
-        
-        return render(request, 'productos/login.html', {'form': form})
-    
+                return redirect('productos:punto_venta')
     else:
-        form = CustomLoginForm()
-        return render(request, 'productos/login.html', {'form': form})
-
+        form = AuthenticationForm()
+    
+    return render(request, 'productos/login.html', {'form': form})
 
 @login_required
 def logout_view(request):

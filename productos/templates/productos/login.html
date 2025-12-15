@@ -4,8 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - Sistema POS</title>
-    <link rel="stylesheet" href="{% static 'css/forms.css' %}">
+    <title>Login - Sistema PDV</title>
     <style>
         * {
             margin: 0;
@@ -35,43 +34,102 @@
             color: #333;
             font-size: 28px;
             margin-bottom: 10px;
+            text-align: center;
         }
         
         .form-header p {
             color: #666;
             font-size: 14px;
+            text-align: center;
+            margin-bottom: 30px;
         }
         
-        .info-box {
-            background-color: #e3f2fd;
-            padding: 15px;
+        .form-alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
             border-radius: 5px;
-            margin-top: 20px;
-            font-size: 13px;
-            color: #1976d2;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
         }
         
-        .info-box p {
-            margin: 5px 0;
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .required {
+            color: #dc3545;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .invalid-feedback {
+            color: #dc3545;
+            font-size: 13px;
+            margin-top: 5px;
+            display: block;
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn-submit:hover {
+            background: #5568d3;
+        }
+        
+        .btn-submit:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .form-actions {
+            margin-top: 25px;
         }
     </style>
 </head>
 <body>
     <div class="form-container">
         <div class="form-header">
-            <h2>Sistema POS</h2>
-            <p>Inicia sesión para continuar</p>
+            <h2>Sistema PDV</h2>
+            <p>Inicia sesion para continuar</p>
         </div>
         
-        <div id="alert-container"></div>
-        
         {% if form.non_field_errors %}
-        <div class="form-alert form-alert-error">
+        <div class="form-alert-error">
             {{ form.non_field_errors.0 }}
         </div>
         {% endif %}
         
-        <form method="POST" id="login-form" novalidate>
+        <form method="POST" action="{% url 'productos:login' %}" id="loginForm">
             {% csrf_token %}
             
             <div class="form-group">
@@ -81,15 +139,12 @@
                     name="username" 
                     id="id_username"
                     class="form-control"
-                    required
-                    minlength="3"
-                    maxlength="150"
-                    autocomplete="username"
-                    autofocus
                     placeholder="Ingresa tu usuario"
+                    value="{{ form.username.value|default:'' }}"
+                    autofocus
                 >
                 {% if form.username.errors %}
-                <span class="validation-message invalid-feedback" style="display: block;">
+                <span class="invalid-feedback">
                     {{ form.username.errors.0 }}
                 </span>
                 {% endif %}
@@ -102,33 +157,28 @@
                     name="password" 
                     id="id_password"
                     class="form-control"
-                    required
-                    minlength="6"
-                    autocomplete="current-password"
                     placeholder="Ingresa tu contraseña"
                 >
                 {% if form.password.errors %}
-                <span class="validation-message invalid-feedback" style="display: block;">
+                <span class="invalid-feedback">
                     {{ form.password.errors.0 }}
                 </span>
                 {% endif %}
             </div>
             
             <div class="form-actions">
-                <button type="submit" class="btn-submit">
-                    Iniciar Sesión
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    Iniciar Sesion
                 </button>
             </div>
         </form>
-        
-        
     </div>
-    
-    <script src="{% static 'js/validators.js' %}"></script>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            initLoginValidation();
-            preventDoubleSubmit('login-form');
+        document.getElementById('loginForm').addEventListener('submit', function() {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Iniciando...';
         });
     </script>
 </body>
