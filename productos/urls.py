@@ -12,4 +12,6 @@ urlpatterns = [
     path('pos/', views.punto_venta, name='punto_venta'),
     path('pos/procesar/', views.procesar_venta, name='procesar_venta'),
     path('venta/<int:venta_id>/ticket/', views.ticket_venta, name='ticket_venta'),
+    path('ventas-del-dia/', views.ventas_del_dia, name='ventas_del_dia'),
+    path('reportes/', views.reportes_ventas, name='reportes_ventas'),
 ]

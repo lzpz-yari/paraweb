@@ -10,7 +10,6 @@
 {% block content %}
 <div class="pos-container">
     
-    <!-- SECCIÓN DE PRODUCTOS -->
     <div class="productos-section">
         <h2> Seleccionar Productos</h2>
         
@@ -62,13 +61,15 @@
                 {% endif %}
             </p>
             
-            <!-- GRID DE PRODUCTOS -->
             <div class="productos-grid">
                 {% for producto in productos %}
                 <div class="producto-card">
                     <div class="producto-imagen">
                         {% if producto.imagen %}
-                            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+                            <img src="{{ producto.get_thumbnail_url }}" 
+                             alt="{{ producto.nombre }}"
+                             loading="lazy"
+                             class="producto-imagen">
                         {% else %}
                             <span class="producto-imagen-placeholder">SIN IMAGEN</span>
                         {% endif %}

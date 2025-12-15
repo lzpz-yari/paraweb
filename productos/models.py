@@ -1,5 +1,21 @@
 from django.db import models
 from django.utils import timezone
+from .image_utils import (
+    process_product_image,
+    delete_old_image,
+    get_placeholder_url,
+    validate_image_size,
+    validate_image_format,
+    validate_image_dimensions
+)
+
+
+def upload_to_productos(instance, filename):
+    """Define ruta de subida organizada por fecha"""
+    from datetime import datetime
+    now = datetime.now()
+    return f'productos/{now.year}/{now.month:02d}/{filename}'
+
 
 class Producto(models.Model):
     codigo_barras = models.CharField(
@@ -21,13 +37,30 @@ class Producto(models.Model):
         verbose_name="descripción",
         help_text="descripción del producto"
     )
-    imagen=models.ImageField(
-        upload_to='productos/',
+    
+    # Imagen principal optimizada
+    imagen = models.ImageField(
+        upload_to=upload_to_productos,
         blank=True,
         null=True,
         verbose_name="imagen del producto",
-        help_text="imagen del producto"
+        help_text="imagen del producto (máx 5MB)",
+        validators=[
+            validate_image_size,
+            validate_image_format,
+            validate_image_dimensions
+        ]
     )
+    
+    # Thumbnail (se genera automáticamente)
+    imagen_thumbnail = models.ImageField(
+        upload_to='productos/thumbnails/',
+        blank=True,
+        null=True,
+        verbose_name="miniatura",
+        editable=False  # No se edita manualmente
+    )
+    
     precio_compra = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -73,12 +106,55 @@ class Producto(models.Model):
     def __str__(self):
         return f"{self.codigo_barras} - {self.nombre}"
     
+    def save(self, *args, **kwargs):
+        """Sobrescribir save para procesar imágenes"""
+        if self.imagen:
+            # Si ya existía una imagen, eliminar la antigua
+            if self.pk:
+                try:
+                    old_producto = Producto.objects.get(pk=self.pk)
+                    if old_producto.imagen and old_producto.imagen != self.imagen:
+                        delete_old_image(old_producto.imagen)
+                        delete_old_image(old_producto.imagen_thumbnail)
+                except Producto.DoesNotExist:
+                    pass
+            
+            # Procesar nueva imagen
+            try:
+                processed_image, thumbnail = process_product_image(self.imagen)
+                self.imagen = processed_image
+                self.imagen_thumbnail = thumbnail
+            except Exception as e:
+                print(f"Error procesando imagen: {e}")
+        
+        super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        """Sobrescribir delete para eliminar imágenes físicas"""
+        delete_old_image(self.imagen)
+        delete_old_image(self.imagen_thumbnail)
+        super().delete(*args, **kwargs)
+    
+    def get_imagen_url(self):
+        """Retorna URL de imagen o placeholder"""
+        if self.imagen:
+            return self.imagen.url
+        return get_placeholder_url()
+    
+    def get_thumbnail_url(self):
+        """Retorna URL de thumbnail o placeholder"""
+        if self.imagen_thumbnail:
+            return self.imagen_thumbnail.url
+        elif self.imagen:
+            return self.imagen.url
+        return get_placeholder_url()
+    
     def calcular_ganancia(self):
         return self.precio_venta - self.precio_compra
-
     
     def necesita_reordenar(self):
         return self.stock <= self.stock_minimo
+    
     def tiene_imagen(self):
         return bool(self.imagen)
 
@@ -87,6 +163,8 @@ class Producto(models.Model):
         verbose_name_plural = "productos"
         ordering = ['nombre']
         db_table = 'productos_producto'
+
+
 class Venta(models.Model):
     ESTADO_CHOICES = [
         ('pendiente', 'Pendiente'),
@@ -201,4 +279,3 @@ class DetalleVenta(models.Model):
         verbose_name = "detalle de venta"
         verbose_name_plural = "detalles de la venta"
         db_table = 'ventas_detalleventa'
-

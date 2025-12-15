@@ -1,0 +1,298 @@
+{% extends 'productos/base.html' %}
+{% load static %}
+
+{% block title %}Reportes de Ventas{% endblock %}
+
+{% block content %}
+<div class="reportes-container">
+    <h1>Reportes de Ventas</h1>
+
+    <div class="filtros-section">
+        <form method="get" class="filtros-form">
+            <div class="filtro-group">
+                <label>Tipo de Reporte:</label>
+                <select name="tipo" onchange="this.form.submit()">
+                    <option value="diario" {% if tipo_reporte == 'diario' %}selected{% endif %}>Diario</option>
+                    <option value="semanal" {% if tipo_reporte == 'semanal' %}selected{% endif %}>Semanal</option>
+                    <option value="mensual" {% if tipo_reporte == 'mensual' %}selected{% endif %}>Mensual</option>
+                    <option value="anual" {% if tipo_reporte == 'anual' %}selected{% endif %}>Anual</option>
+                </select>
+            </div>
+
+            <div class="filtro-group">
+                <label>Desde:</label>
+                <input type="date" name="fecha_inicio" value="{{ fecha_inicio }}">
+            </div>
+
+            <div class="filtro-group">
+                <label>Hasta:</label>
+                <input type="date" name="fecha_fin" value="{{ fecha_fin }}">
+            </div>
+
+            <button type="submit" class="btn-filtrar">Filtrar</button>
+        </form>
+    </div>
+
+    <div class="totales-grid">
+        <div class="total-card">
+            <h3>Total en Ventas</h3>
+            <p class="amount">${{ totales_generales.total_dinero|floatformat:2|default:"0.00" }}</p>
+        </div>
+
+        <div class="total-card">
+            <h3>Numero de Ventas</h3>
+            <p class="amount">{{ totales_generales.total_ventas|default:"0" }}</p>
+        </div>
+
+        <div class="total-card">
+            <h3>Ticket Promedio</h3>
+            {% if totales_generales.total_ventas > 0 %}
+                {% widthratio totales_generales.total_dinero totales_generales.total_ventas 1 as promedio %}
+                <p class="amount">${{ promedio|floatformat:2 }}</p>
+            {% else %}
+                <p class="amount">$0.00</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="tabla-section">
+        <h2>Ventas por {{ tipo_reporte|capfirst }}</h2>
+        
+        {% if ventas_agrupadas %}
+        <table class="reportes-table">
+            <thead>
+                <tr>
+                    <th>Periodo</th>
+                    <th>Total Ventas</th>
+                    <th>Cantidad</th>
+                    <th>Promedio</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for venta in ventas_agrupadas %}
+                <tr>
+                    <td>{{ venta.periodo|date:"d/m/Y" }}</td>
+                    <td class="total-col">${{ venta.total|floatformat:2 }}</td>
+                    <td>{{ venta.cantidad }}</td>
+                    <td>
+                        {% widthratio venta.total venta.cantidad 1 as prom %}
+                        ${{ prom|floatformat:2 }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="no-datos">No hay datos para mostrar</p>
+        {% endif %}
+    </div>
+
+    <div class="productos-top-section">
+        <h2>Top 10 Productos Mas Vendidos</h2>
+        
+        {% if productos_top %}
+        <table class="reportes-table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad Vendida</th>
+                    <th>Ingresos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos_top %}
+                <tr>
+                    <td>{{ producto.producto__nombre }}</td>
+                    <td>{{ producto.cantidad_vendida }}</td>
+                    <td class="total-col">${{ producto.ingresos|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="no-datos">No hay datos para mostrar</p>
+        {% endif %}
+    </div>
+
+    <div class="acciones">
+        <button onclick="window.print()" class="btn-accion btn-imprimir">Imprimir</button>
+        <a href="{% url 'admin:index' %}" class="btn-accion btn-volver">Volver al Admin</a>
+    </div>
+</div>
+
+<style>
+.reportes-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.reportes-container h1 {
+    color: #2c3e50;
+    margin-bottom: 30px;
+}
+
+.filtros-section {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.filtros-form {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.filtro-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filtro-group label {
+    font-weight: 500;
+    color: #555;
+}
+
+.filtro-group select,
+.filtro-group input {
+    padding: 10px 15px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.btn-filtrar {
+    padding: 10px 30px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-filtrar:hover {
+    background: #0056b3;
+}
+
+.totales-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.total-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.total-card h3 {
+    margin: 0 0 15px 0;
+    color: #7f8c8d;
+    font-size: 16px;
+}
+
+.amount {
+    font-size: 36px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.tabla-section,
+.productos-top-section {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.tabla-section h2,
+.productos-top-section h2 {
+    margin-top: 0;
+    color: #2c3e50;
+}
+
+.reportes-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.reportes-table th {
+    background: #f8f9fa;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.reportes-table td {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.total-col {
+    font-weight: bold;
+    color: #28a745;
+}
+
+.no-datos {
+    text-align: center;
+    padding: 40px;
+    color: #7f8c8d;
+}
+
+.acciones {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.btn-accion {
+    padding: 12px 30px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    text-decoration: none;
+    transition: background 0.3s;
+}
+
+.btn-imprimir {
+    background: #28a745;
+    color: white;
+}
+
+.btn-imprimir:hover {
+    background: #218838;
+}
+
+.btn-volver {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-volver:hover {
+    background: #5a6268;
+}
+
+@media print {
+    .filtros-section,
+    .acciones {
+        display: none;
+    }
+}
+</style>
+{% endblock %}

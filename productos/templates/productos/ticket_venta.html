@@ -1,7 +1,7 @@
 {% extends 'productos/base.html' %}
 {% load static %}
 
-{% block title %}Ticket de Venta #{{ venta.id }} - Sistema POS{% endblock %}
+{% block title %}Ticket de Venta #{{ venta.id }}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/ticket.css' %}">
@@ -10,14 +10,12 @@
 {% block content %}
 <div class="ticket-container">
     
-    <!-- HEADER DEL TICKET -->
     <div class="ticket-header">
-        <h1 class="ticket-titulo"> SISTEMA PDV</h1>
+        <h1 class="ticket-titulo">SISTEMA PDV</h1>
         <p class="ticket-subtitulo">Tienda Wicho</p>
-        <p class="ticket-rfc">RFC: XXX-XXXXXX-XXX</p>
+        <p class="ticket-rfc">RFC: PZL-CNRHAC-034</p>
     </div>
     
-    <!-- INFORMACIÓN DE LA VENTA -->
     <div class="ticket-info">
         <div class="ticket-info-row">
             <span class="ticket-info-label">Ticket:</span>
@@ -35,10 +33,8 @@
         </div>
     </div>
     
-    <!-- SEPARADOR -->
     <div class="ticket-separador"></div>
     
-    <!-- PRODUCTOS -->
     <div class="ticket-productos">
         <table class="ticket-table">
             <thead>
@@ -50,43 +46,39 @@
                 </tr>
             </thead>
             <tbody>
-                {% for detalle in venta.detalleventa_set.all %}
+                {% for detalle in venta.detalles.all %}
                 <tr>
-                    <td>{{ detalle.producto.nombre|truncatewords:3 }}</td>
+                    <td>{{ detalle.producto.nombre }}</td>
                     <td>{{ detalle.cantidad }}</td>
-                    <td>${{ detalle.precio_unitario }}</td>
-                    <td>${{ detalle.subtotal }}</td>
+                    <td>${{ detalle.precio_unitario|floatformat:2 }}</td>
+                    <td>${{ detalle.subtotal|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
     
-    <!-- SEPARADOR -->
     <div class="ticket-separador"></div>
     
-    <!-- TOTAL -->
     <div class="ticket-total">
         <div class="ticket-total-row">
             <span>TOTAL:</span>
-            <span class="ticket-total-monto">${{ venta.total }}</span>
+            <span class="ticket-total-monto">${{ venta.total|floatformat:2 }}</span>
         </div>
     </div>
     
-    <!-- FOOTER -->
     <div class="ticket-footer">
-        <p>¡Gracias por su compra!</p>
+        <p>Gracias por su compra</p>
         <p>Conserve su ticket</p>
-        <p>www.sistemapos.com</p>
+        <p>www.sistemapdv.com</p>
     </div>
     
-    <!-- BOTONES DE ACCIÓN -->
     <div class="ticket-acciones no-print">
         <button onclick="window.print()" class="btn-imprimir">
-             Imprimir
+            Imprimir
         </button>
         <button onclick="window.history.back()" class="btn-volver">
-             Volver
+            Volver
         </button>
     </div>
     

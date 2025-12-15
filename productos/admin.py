@@ -6,6 +6,7 @@ from .models import Producto, Venta, DetalleVenta
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
     list_display = [
+        'thumbnail_preview',  
         'codigo_barras',
         'nombre',
         'precio_compra',
@@ -14,7 +15,6 @@ class ProductoAdmin(admin.ModelAdmin):
         'activo',
         'mostrar_ganancia',
         'mostrar_alerta_stock',
-        'mostrar_imagen', 
     ]
     
     list_filter = [
@@ -42,7 +42,12 @@ class ProductoAdmin(admin.ModelAdmin):
                 'codigo_barras',
                 'nombre',
                 'descripcion',
+            )
+        }),
+        ('Imagen', {
+            'fields': (
                 'imagen',
+                'imagen_preview',
             )
         }),
         ('Precios', {
@@ -64,7 +69,6 @@ class ProductoAdmin(admin.ModelAdmin):
             'fields': (
                 'fecha_creacion',
                 'fecha_actualizacion',
-                'mostrar_miniatura',
             ),
             'classes': ('collapse',), 
         }),
@@ -73,8 +77,29 @@ class ProductoAdmin(admin.ModelAdmin):
     readonly_fields = [
         'fecha_creacion',
         'fecha_actualizacion',
-        'mostrar_miniatura'
+        'imagen_thumbnail',
+        'imagen_preview'
     ]
+
+    @admin.display(description='Imagen')
+    def thumbnail_preview(self, obj):
+        """Muestra thumbnail en la lista"""
+        if obj.imagen_thumbnail:
+            return format_html(
+                '<img src="{}" width="50" height="50" style="object-fit: cover; border-radius: 5px;" />',
+                obj.get_thumbnail_url()
+            )
+        return "Sin imagen"
+    
+    @admin.display(description='Vista Previa')
+    def imagen_preview(self, obj):
+        """Muestra imagen grande en el formulario"""
+        if obj.imagen:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 300px; object-fit: contain; border: 1px solid #ddd; padding: 5px; border-radius: 5px;" />',
+                obj.get_imagen_url()
+            )
+        return "Sin imagen"
 
     @admin.display(description='Ganancia', ordering='precio_venta')
     def mostrar_ganancia(self, obj):
@@ -84,21 +109,6 @@ class ProductoAdmin(admin.ModelAdmin):
     @admin.display(description='Stock OK', boolean=True)
     def mostrar_alerta_stock(self, obj):
         return not obj.necesita_reordenar()
-
-    @admin.display(description='Imagen')
-    def mostrar_imagen(self, obj):
-        if obj.imagen:
-            return " Sí"
-        return " No"
-    
-    @admin.display(description='Miniatura')
-    def mostrar_miniatura(self, obj):
-        if obj.imagen:
-            return format_html(
-                '<img src="{}" width="200" height="200" style="object-fit: contain;" />',
-                obj.imagen.url
-            )
-        return "Sin imagen"
     
     actions = ['marcar_como_inactivo', 'marcar_como_activo']
     
@@ -196,9 +206,7 @@ class VentaAdmin(admin.ModelAdmin):
     def ver_ticket(self, obj):
         from django.urls import reverse
         url = reverse('productos:ticket_venta', args=[obj.id])
-        return format_html(
-        '<a href="{}"> Ver </a>',
-        url )
+        return format_html('<a href="{}"> Ver </a>', url)
 
 
 @admin.register(DetalleVenta)

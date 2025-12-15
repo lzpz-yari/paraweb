@@ -1,8 +1,12 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
-from .models import Producto, Venta, DetalleVenta
+from .models import Producto
+from .image_utils import (
+    validate_image_size,
+    validate_image_format,
+    validate_image_dimensions
+)
 
 
 class CustomLoginForm(AuthenticationForm):
@@ -76,7 +80,112 @@ class BusquedaProductoForm(forms.Form):
         widget=forms.Select(attrs={'class': 'filter-select'})
     )
     
-    
     def clean_buscar(self):
         buscar = self.cleaned_data.get('buscar', '')
         return buscar.strip()
+
+
+class ProductoForm(forms.ModelForm):
+    """Formulario de producto con validación de imágenes"""
+    
+    class Meta:
+        model = Producto
+        fields = [
+            'codigo_barras', 'nombre', 'descripcion',
+            'precio_compra', 'precio_venta', 'stock',
+            'stock_minimo', 'activo', 'imagen'
+        ]
+        widgets = {
+            'codigo_barras': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Código de barras'
+            }),
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nombre del producto'
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Descripción'
+            }),
+            'precio_compra': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0.01'
+            }),
+            'precio_venta': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0.01'
+            }),
+            'stock': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0'
+            }),
+            'stock_minimo': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0'
+            }),
+            'activo': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'imagen': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/jpeg,image/png,image/webp'
+            })
+        }
+    
+    def clean_imagen(self):
+        """Validación exhaustiva de imagen"""
+        imagen = self.cleaned_data.get('imagen')
+        
+        if not imagen:
+            return imagen
+        
+        try:
+            validate_image_size(imagen)
+            validate_image_format(imagen)
+            validate_image_dimensions(imagen)
+        except ValidationError as e:
+            raise ValidationError(str(e))
+        
+        return imagen
+    
+    def clean_codigo_barras(self):
+        """Validación de código de barras"""
+        codigo = self.cleaned_data.get('codigo_barras')
+        
+        if not codigo:
+            raise ValidationError('El código de barras es obligatorio')
+        
+        codigo = codigo.strip()
+        
+        if len(codigo) < 3:
+            raise ValidationError('El código debe tener al menos 3 caracteres')
+        
+        # Verificar unicidad
+        qs = Producto.objects.filter(codigo_barras=codigo)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        
+        if qs.exists():
+            raise ValidationError('Ya existe un producto con este código')
+        
+        return codigo
+    
+    def clean(self):
+        """Validación completa del formulario"""
+        cleaned_data = super().clean()
+        
+        precio_compra = cleaned_data.get('precio_compra')
+        precio_venta = cleaned_data.get('precio_venta')
+        
+        if precio_compra and precio_venta:
+            if precio_venta <= precio_compra:
+                raise ValidationError(
+                    'El precio de venta debe ser mayor al de compra'
+                )
+        
+        return cleaned_data
+        

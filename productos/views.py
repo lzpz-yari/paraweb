@@ -4,6 +4,9 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.db import transaction
+from django.db.models import Sum, Count
+from django.db.models.functions import TruncDate, TruncWeek, TruncMonth, TruncYear
+from django.utils import timezone
 from .models import Producto, Venta, DetalleVenta
 from .forms import CustomLoginForm, BusquedaProductoForm
 from django.db.models import Q
@@ -67,13 +70,11 @@ def procesar_venta(request):
         datos = json.loads(request.body)
         items = datos.get('items', [])
         
-        # Validación: verificar que haya items
         if not items or len(items) == 0:
             return JsonResponse({
                 'error': 'El carrito está vacío'
             }, status=400)
         
-        # Validación: verificar estructura de cada item
         errores = []
         for idx, item in enumerate(items):
             if not item.get('producto_id'):
@@ -88,7 +89,6 @@ def procesar_venta(request):
                 'error': ', '.join(errores)
             }, status=400)
         
-        # Procesar venta en transacción atómica
         with transaction.atomic():
             venta = Venta.objects.create(estado='completada')
             
@@ -101,14 +101,12 @@ def procesar_venta(request):
                 cantidad = int(item['cantidad'])
                 precio_unitario = Decimal(str(item['precio_unitario']))
                 
-                # Validar stock disponible
                 if producto.stock < cantidad:
                     raise ValueError(
                         f'Stock insuficiente para {producto.nombre}. '
                         f'Disponible: {producto.stock}, Solicitado: {cantidad}'
                     )
                 
-                # Crear detalle de venta
                 DetalleVenta.objects.create(
                     venta=venta,
                     producto=producto,
@@ -116,14 +114,11 @@ def procesar_venta(request):
                     precio_unitario=precio_unitario
                 )
                 
-                # Actualizar stock
                 producto.stock -= cantidad
                 producto.save()
             
-            # Calcular total de la venta
             venta.calcular_total()
         
-        # Respuesta exitosa
         return JsonResponse({
             'venta_id': venta.id,
             'total': str(venta.total),
@@ -141,12 +136,114 @@ def procesar_venta(request):
 
 @login_required
 def ticket_venta(request, venta_id):
-    """Ver ticket - requiere login"""
+    """Ver ticket"""
     venta = get_object_or_404(Venta, id=venta_id)
     contexto = {
         'venta': venta,
     }
     return render(request, 'productos/ticket_venta.html', contexto)
+
+
+@login_required
+def ventas_del_dia(request):
+    """Vista para que el cajero vea el total de ventas del día"""
+    hoy = timezone.now().date()
+    
+    ventas_hoy = Venta.objects.filter(
+        fecha__date=hoy,
+        estado='completada'
+    )
+    
+    total_ventas = ventas_hoy.aggregate(
+        total=Sum('total'),
+        cantidad=Count('id')
+    )
+    
+    ventas_list = ventas_hoy.select_related().prefetch_related('detalles__producto')
+    
+    contexto = {
+        'fecha': hoy,
+        'total_dinero': total_ventas['total'] or 0,
+        'cantidad_ventas': total_ventas['cantidad'] or 0,
+        'ventas': ventas_list
+    }
+    
+    return render(request, 'productos/ventas_del_dia.html', contexto)
+
+
+@login_required
+def reportes_ventas(request):
+    """Vista de reportes para administradores"""
+    if not request.user.is_staff:
+        return redirect('productos:punto_venta')
+    
+    tipo_reporte = request.GET.get('tipo', 'diario')
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+    
+    ventas = Venta.objects.filter(estado='completada')
+    
+    if fecha_inicio:
+        ventas = ventas.filter(fecha__gte=fecha_inicio)
+    if fecha_fin:
+        ventas = ventas.filter(fecha__lte=fecha_fin)
+    
+    if tipo_reporte == 'diario':
+        ventas_agrupadas = ventas.annotate(
+            periodo=TruncDate('fecha')
+        ).values('periodo').annotate(
+            total=Sum('total'),
+            cantidad=Count('id')
+        ).order_by('-periodo')
+        
+    elif tipo_reporte == 'semanal':
+        ventas_agrupadas = ventas.annotate(
+            periodo=TruncWeek('fecha')
+        ).values('periodo').annotate(
+            total=Sum('total'),
+            cantidad=Count('id')
+        ).order_by('-periodo')
+        
+    elif tipo_reporte == 'mensual':
+        ventas_agrupadas = ventas.annotate(
+            periodo=TruncMonth('fecha')
+        ).values('periodo').annotate(
+            total=Sum('total'),
+            cantidad=Count('id')
+        ).order_by('-periodo')
+        
+    elif tipo_reporte == 'anual':
+        ventas_agrupadas = ventas.annotate(
+            periodo=TruncYear('fecha')
+        ).values('periodo').annotate(
+            total=Sum('total'),
+            cantidad=Count('id')
+        ).order_by('-periodo')
+    
+    totales_generales = ventas.aggregate(
+        total_dinero=Sum('total'),
+        total_ventas=Count('id')
+    )
+    
+    productos_top = DetalleVenta.objects.filter(
+        venta__in=ventas
+    ).values(
+        'producto__nombre'
+    ).annotate(
+        cantidad_vendida=Sum('cantidad'),
+        ingresos=Sum('subtotal')
+    ).order_by('-cantidad_vendida')[:10]
+    
+    contexto = {
+        'tipo_reporte': tipo_reporte,
+        'ventas_agrupadas': ventas_agrupadas,
+        'totales_generales': totales_generales,
+        'productos_top': productos_top,
+        'fecha_inicio': fecha_inicio,
+        'fecha_fin': fecha_fin,
+    }
+    
+    return render(request, 'productos/reportes_ventas.html', contexto)
 
 
 def login_view(request):
@@ -169,8 +266,7 @@ def login_view(request):
                 auth_login(request, user)
                 
                 if user.is_staff:
-                    return redirect('/admin/')
-                return redirect('productos:punto_venta')
+                    return redirect('productos:punto_venta')
             else:
                 form.add_error(None, 'Usuario o contraseña incorrectos')
         

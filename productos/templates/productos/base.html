@@ -6,31 +6,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Sistema POS{% endblock %}</title>
     
-    <!-- CSS Global -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     
-    <!-- CSS Específico de cada página -->
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <header>
-        <h1> Sistema PDV - Wicho</h1>
+        <h1>Sistema PDV - Wicho</h1>
         <nav>
             {% if user.is_authenticated %}
                 <span class="user-info">
-                     {{ user.get_full_name|default:user.username }}
+                    {{ user.get_full_name|default:user.username }}
                     {% if user.groups.all %}
                         ({{ user.groups.all.0.name }})
                     {% endif %}
                 </span>
-                <a href="{% url 'productos:lista' %}"> Productos</a>
-                <a href="{% url 'productos:punto_venta' %}"> Punto de Venta</a>
+                <a href="{% url 'productos:lista' %}">Productos</a>
+                <a href="{% url 'productos:punto_venta' %}">Punto de Venta</a>
+                <a href="{% url 'productos:ventas_del_dia' %}">Ventas del Dia</a>
                 {% if user.is_staff %}
-                    <a href="/admin/"> Admin</a>
+                    <a href="/admin/">Admin</a>
+                    <a href="{% url 'productos:reportes_ventas' %}">Reportes</a>
                 {% endif %}
-                <a href="{% url 'productos:logout' %}" class="btn btn-danger"> Cerrar Sesión</a>
+                <a href="{% url 'productos:logout' %}" class="btn btn-danger">Cerrar Sesion</a>
             {% else %}
-                <a href="{% url 'productos:login' %}"> Iniciar Sesión</a>
+                <a href="{% url 'productos:login' %}">Iniciar Sesion</a>
             {% endif %}
         </nav>
     </header>
