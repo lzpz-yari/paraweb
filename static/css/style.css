@@ -247,3 +247,140 @@ textarea:focus {
         text-align: center;
     }
 }
+
+@media print {
+    header,
+    nav,
+    .navbar,
+    .user-info,
+    .btn,
+    .button,
+    .no-print,
+    .btn-accion,
+    .ticket-acciones,
+    .filtros-section,
+    .acciones,
+    .btn-filtrar,
+    footer,
+    .pagination,
+    .form-actions,
+    .breadcrumb {
+        display: none !important;
+    }
+    
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        color: black !important;
+        font-size: 12px !important;
+        font-family: "Arial", sans-serif !important;
+        line-height: 1.4 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    main, .container, .content, .main-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 10mm !important;
+        box-shadow: none !important;
+        border: none !important;
+        background: white !important;
+    }
+    
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 11px !important;
+        page-break-inside: avoid;
+    }
+    
+    table th {
+        background-color: #f0f0f0 !important;
+        color: black !important;
+        border: 1px solid #000 !important;
+        padding: 8px 6px !important;
+        font-weight: bold;
+    }
+    
+    table td {
+        border: 1px solid #000 !important;
+        padding: 6px 4px !important;
+    }
+    
+    @page {
+        size: A4 portrait;
+        margin: 15mm;
+    }
+    
+    .ticket-container {
+        @page {
+            size: 80mm auto;
+            margin: 0;
+        }
+    }
+    
+    img {
+        max-width: 100% !important;
+        height: auto !important;
+        page-break-inside: avoid;
+    }
+    
+    a {
+        color: black !important;
+        text-decoration: none !important;
+    }
+    
+    a[href^="http"]:after {
+        content: " (" attr(href) ")";
+        font-size: 10px;
+        color: #666;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+        color: black !important;
+    }
+    
+    p, ul, ol, blockquote {
+        page-break-inside: avoid;
+    }
+    
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    * {
+        background: white !important;
+        color: black !important;
+    }
+    
+    .text-danger, .error, .alert-danger {
+        color: black !important;
+        font-weight: bold;
+    }
+    
+    .text-success, .success, .alert-success {
+        color: black !important;
+        font-weight: bold;
+    }
+    
+    .text-warning, .warning, .alert-warning {
+        color: black !important;
+        font-weight: bold;
+    }
+    
+    .border, .table-bordered, [class*="border-"] {
+        border-color: black !important;
+    }
+}
+
+@media screen and (max-width: 80mm) {
+    .ticket-container {
+        max-width: 80mm;
+        margin: 0 auto;
+    }
+}

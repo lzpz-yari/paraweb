@@ -25,10 +25,12 @@ SECRET_KEY = 'django-insecure-0ky8i6g0=vgu!)w_n-3#yqa-lcma*$uxr+m%&u-l#zj%j0fw&v
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+#DEBUG = False
+ALLOWED_HOSTS = ['*']
 
-ALLOWED_HOSTS = []
-
-
+CSRF_TRUSTED_ORIGINS = [
+     'https://matha-unbraved-aidyn.ngrok-free.dev',
+]
 # Application definition
 
 INSTALLED_APPS = [

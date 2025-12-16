@@ -40,7 +40,7 @@
         </div>
 
         <div class="total-card">
-            <h3>Numero de Ventas</h3>
+            <h3>Número de Ventas</h3>
             <p class="amount">{{ totales_generales.total_ventas|default:"0" }}</p>
         </div>
 
@@ -88,7 +88,7 @@
     </div>
 
     <div class="productos-top-section">
-        <h2>Top 10 Productos Mas Vendidos</h2>
+        <h2>Top 10 Productos Más Vendidos</h2>
         
         {% if productos_top %}
         <table class="reportes-table">
@@ -289,9 +289,150 @@
 }
 
 @media print {
+    header,
+    nav,
+    .navbar,
+    .user-info,
     .filtros-section,
-    .acciones {
-        display: none;
+    .acciones,
+    .btn-accion,
+    .btn-filtrar,
+    .no-print {
+        display: none !important;
+    }
+    
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        color: black !important;
+        font-size: 12px !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .reportes-container {
+        padding: 0 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+    
+    .reportes-container h1 {
+        font-size: 24px !important;
+        margin-bottom: 20px !important;
+        color: black !important;
+        text-align: center;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+    }
+    
+    .tabla-section h2,
+    .productos-top-section h2 {
+        font-size: 18px !important;
+        color: black !important;
+        border-bottom: 1px solid #000;
+        padding-bottom: 5px;
+        margin-bottom: 15px;
+    }
+    
+    .reportes-table {
+        width: 100% !important;
+        font-size: 11px !important;
+        border: 1px solid #000 !important;
+        page-break-inside: avoid;
+    }
+    
+    .reportes-table th {
+        background: #f0f0f0 !important;
+        color: black !important;
+        border: 1px solid #000 !important;
+        padding: 8px 6px !important;
+        font-weight: bold;
+    }
+    
+    .reportes-table td {
+        border: 1px solid #000 !important;
+        padding: 6px 4px !important;
+    }
+    
+    .totales-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 15px !important;
+        margin-bottom: 25px !important;
+    }
+    
+    .total-card {
+        padding: 15px !important;
+        box-shadow: none !important;
+        border: 2px solid #000 !important;
+        background: white !important;
+        page-break-inside: avoid;
+    }
+    
+    .total-card h3 {
+        color: black !important;
+        font-size: 14px !important;
+        margin-bottom: 10px !important;
+    }
+    
+    .amount {
+        font-size: 24px !important;
+        color: black !important;
+        font-weight: bold;
+    }
+    
+    @page {
+        size: A4 portrait;
+        margin: 15mm;
+    }
+    
+    .tabla-section,
+    .productos-top-section {
+        page-break-inside: avoid;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 15px 0 !important;
+        margin-bottom: 20px !important;
+    }
+    
+    .total-col {
+        color: black !important;
+        font-weight: bold !important;
+    }
+    
+    h1, h2, h3 {
+        color: black !important;
+    }
+    
+    .no-datos {
+        text-align: center;
+        padding: 20px;
+        color: black !important;
+        font-style: italic;
+        border: 1px dashed #000;
+        background: #f9f9f9 !important;
+    }
+    
+    .reportes-container h1::after {
+        content: " - Generado: {% now 'd/m/Y H:i' %}";
+        font-size: 14px;
+        font-weight: normal;
+        color: #666;
+        display: block;
+        margin-top: 5px;
+    }
+    
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        background: white !important;
+        color: black !important;
+    }
+    
+    .border, .table-bordered, [class*="border-"] {
+        border-color: black !important;
     }
 }
 </style>

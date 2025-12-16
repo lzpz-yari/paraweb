@@ -11,7 +11,7 @@
 <div class="pos-container">
     
     <div class="productos-section">
-        <h2> Seleccionar Productos</h2>
+        <h2>Seleccionar Productos</h2>
         
         <!-- FORMULARIO DE BÚSQUEDA -->
         <form method="GET" action="{% url 'productos:punto_venta' %}" class="search-form">
@@ -19,7 +19,7 @@
                 <input 
                     type="text" 
                     name="buscar" 
-                    placeholder=" Buscar por nombre o código..." 
+                    placeholder="Buscar por nombre o código..." 
                     value="{{ request.GET.buscar }}"
                     class="search-input"
                 >
@@ -46,7 +46,7 @@
         <!-- MENSAJES -->
         {% if not productos %}
             <div class="alert alert-warning">
-                <strong> No se encontraron productos.</strong>
+                <strong>No se encontraron productos.</strong>
                 {% if request.GET.buscar %}
                     Intenta con otro término de búsqueda.
                 {% else %}
@@ -67,9 +67,9 @@
                     <div class="producto-imagen">
                         {% if producto.imagen %}
                             <img src="{{ producto.get_thumbnail_url }}" 
-                             alt="{{ producto.nombre }}"
-                             loading="lazy"
-                             class="producto-imagen">
+                                 alt="{{ producto.nombre }}"
+                                 loading="lazy"
+                                 class="producto-imagen">
                         {% else %}
                             <span class="producto-imagen-placeholder">SIN IMAGEN</span>
                         {% endif %}
@@ -83,11 +83,11 @@
                         <p class="producto-stock">
                             {% if producto.stock > 0 %}
                                 <span class="stock-disponible">
-                                     Stock: {{ producto.stock }}
+                                    Stock: {{ producto.stock }}
                                 </span>
                             {% else %}
                                 <span class="stock-agotado">
-                                     Sin stock
+                                    Sin stock
                                 </span>
                             {% endif %}
                         </p>
@@ -97,7 +97,7 @@
                             class="btn btn-agregar"
                             {% if producto.stock == 0 %}disabled{% endif %}
                         >
-                             Agregar
+                            Agregar
                         </button>
                     </div>
                 </div>
@@ -109,7 +109,7 @@
     <!-- SECCIÓN DEL CARRITO -->
     <div class="carrito-section">
         <div class="carrito-sidebar">
-            <h3 class="carrito-titulo"> Carrito de Compra</h3>
+            <h3 class="carrito-titulo">Carrito de Compra</h3>
             
             <div id="carrito-items" class="carrito-items">
                 <div class="carrito-vacio">
@@ -131,7 +131,7 @@
                     id="btn-procesar"
                     disabled
                 >
-                     Procesar Venta
+                    Procesar Venta
                 </button>
                 
                 <button 
@@ -140,7 +140,7 @@
                     id="btn-limpiar"
                     disabled
                 >
-                     Limpiar Carrito
+                    Limpiar Carrito
                 </button>
             </div>
         </div>
@@ -168,6 +168,7 @@ function getCookie(name) {
 }
 
 const csrftoken = getCookie('csrftoken');
+
 function validateSaleData(items) {
     const errors = [];
     
@@ -194,21 +195,25 @@ function validateSaleData(items) {
 }
 
 function agregarAlCarrito(productoId, nombre, precio) {
-    const itemExistente = carrito.find(item => item.id === productoId);
+    // Convertir a tipos correctos
+    const id = parseInt(productoId);
+    const precioNum = parseFloat(precio);
+    
+    const itemExistente = carrito.find(item => item.id === id);
     
     if (itemExistente) {
         itemExistente.cantidad++;
     } else {
         carrito.push({
-            id: productoId,
+            id: id,
             nombre: nombre,
-            precio: precio,
+            precio: precioNum,
             cantidad: 1
         });
     }
     
     actualizarCarrito();
-    mostrarNotificacion( nombre + ' agregado', 'success');
+    mostrarNotificacion(nombre + ' agregado', 'success');
 }
 
 function actualizarCarrito() {
@@ -244,7 +249,7 @@ function actualizarCarrito() {
                     <button onclick="cambiarCantidad(${index}, -1)" class="btn-cantidad btn-cantidad-menos">-</button>
                     <span style="margin: 0 5px;">${item.cantidad}</span>
                     <button onclick="cambiarCantidad(${index}, 1)" class="btn-cantidad btn-cantidad-mas">+</button>
-                    <button onclick="eliminarItem(${index})" class="btn-eliminar"> X </button>
+                    <button onclick="eliminarItem(${index})" class="btn-eliminar">X</button>
                 </div>
                 <div class="carrito-item-subtotal">
                     $${subtotal.toFixed(2)}
@@ -278,7 +283,7 @@ function limpiarCarrito() {
     if (confirm('¿Estás seguro de limpiar el carrito?')) {
         carrito = [];
         actualizarCarrito();
-        mostrarNotificacion(' Carrito limpiado', 'info');
+        mostrarNotificacion('Carrito limpiado', 'info');
     }
 }
 
@@ -296,7 +301,6 @@ async function procesarVenta() {
         }))
     };
     
-    // Validar datos del lado del cliente
     const errors = validateSaleData(datos.items);
     if (errors.length > 0) {
         mostrarNotificacion('Error: ' + errors.join(', '), 'error');
@@ -304,6 +308,7 @@ async function procesarVenta() {
     }
     
     const btnProcesar = document.getElementById('btn-procesar');
+    const originalText = btnProcesar.textContent;
     btnProcesar.disabled = true;
     btnProcesar.textContent = 'Procesando...';
     
@@ -325,7 +330,11 @@ async function procesarVenta() {
             mostrarNotificacion('Venta procesada exitosamente', 'success');
             carrito = [];
             actualizarCarrito();
-            mostrarResumenVenta(resultado);
+            
+            setTimeout(() => {
+                window.location.href = '/productos/venta/' + resultado.venta_id + '/ticket/';
+            }, 800);
+            
         } else {
             mostrarNotificacion('Error: ' + resultado.error, 'error');
         }
@@ -335,26 +344,9 @@ async function procesarVenta() {
         mostrarNotificacion('Error de conexión con el servidor', 'error');
     } finally {
         btnProcesar.disabled = false;
-        btnProcesar.textContent = 'Procesar Venta';
+        btnProcesar.textContent = originalText;
     }
 }
-
-function mostrarResumenVenta(resultado) {
-    const mensaje = `Venta procesada exitosamente
-
-ID de Venta: #${resultado.venta_id}
-Total: $${resultado.total}
-Productos: ${resultado.cantidad_items} items
-Fecha: ${resultado.fecha}`;
-    
-    alert(mensaje);
-    
-    if (confirm('¿Deseas ver el ticket de venta para imprimir?')) {
-        
-        window.location.href = '/productos/venta/' + resultado.venta_id + '/ticket/';
-    }
-}
-
 function mostrarNotificacion(mensaje, tipo) {
     const notif = document.createElement('div');
     notif.textContent = mensaje;

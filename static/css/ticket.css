@@ -164,30 +164,74 @@
     cursor: pointer;
     font-size: 1em;
 }
-
-
 @media print {
     body {
-        margin: 0;
-        padding: 0;
-        background-color: white;
+        margin: 0 !important;
+        padding: 0 !important;
+        background-color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
     
-    .ticket-container {
-        box-shadow: none;
-        padding: 10px;
-        max-width: 100%;
-    }
-    
-    .no-print {
-        display: none !important;
-    }
-    
+    header,
+    nav,
+    .navbar,
+    .user-info,
+    .no-print,
     .ticket-acciones {
         display: none !important;
     }
     
+    .ticket-container {
+        box-shadow: none !important;
+        padding: 10px !important;
+        max-width: 80mm !important;
+        margin: 0 auto !important;
+        width: 80mm !important;
+        font-size: 12px !important;
+        page-break-inside: avoid;
+    }
+    
+    .ticket-titulo {
+        font-size: 14px !important;
+    }
+    
+    .ticket-subtitulo,
+    .ticket-rfc {
+        font-size: 10px !important;
+    }
+    
+    .ticket-table {
+        font-size: 10px !important;
+    }
+    
+    .ticket-total-row {
+        font-size: 14px !important;
+    }
+    
+    .ticket-footer {
+        font-size: 10px !important;
+    }
+    
+    .ticket-separador,
+    .ticket-header,
+    .ticket-footer {
+        border-color: black !important;
+    }
+    
+    .estado-completada,
+    .ticket-total-monto {
+        color: black !important;
+        font-weight: bold;
+    }
+    
     @page {
+        size: 80mm auto;
         margin: 0;
+    }
+    
+    .ticket-container {
+        page-break-after: avoid;
+        page-break-inside: avoid;
     }
 }

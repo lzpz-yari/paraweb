@@ -152,10 +152,13 @@ def ticket_venta(request, venta_id):
 @login_required
 def ventas_del_dia(request):
     """Vista para que el cajero vea el total de ventas del día"""
-    hoy = timezone.now().date()
+    from datetime import timedelta
+    
+    ahora = timezone.now()
+    hace_24h = ahora - timedelta(hours=24)
     
     ventas_hoy = Venta.objects.filter(
-        fecha__date=hoy,
+        fecha__gte=hace_24h,
         estado='completada'
     )
     
@@ -167,7 +170,7 @@ def ventas_del_dia(request):
     ventas_list = ventas_hoy.select_related().prefetch_related('detalles__producto')
     
     contexto = {
-        'fecha': hoy,
+        'fecha': ahora.date(),
         'total_dinero': total_ventas['total'] or 0,
         'cantidad_ventas': total_ventas['cantidad'] or 0,
         'ventas': ventas_list

@@ -74,13 +74,76 @@
     </div>
     
     <div class="ticket-acciones no-print">
-        <button onclick="window.print()" class="btn-imprimir">
+        <button id="btn-imprimir-ticket" class="btn-imprimir">
             Imprimir
         </button>
-        <button onclick="window.history.back()" class="btn-volver">
+        <button id="btn-volver-ticket" class="btn-volver">
             Volver
         </button>
     </div>
     
 </div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnImprimir = document.getElementById('btn-imprimir-ticket');
+    const btnVolver = document.getElementById('btn-volver-ticket');
+    
+    // BOTÓN IMPRIMIR - SIMPLIFICADO
+    btnImprimir.addEventListener('click', function() {
+        window.print();
+    });
+    
+    // BOTÓN VOLVER - SIMPLIFICADO
+    btnVolver.addEventListener('click', function() {
+        // Si esta ventana tiene un opener (fue abierta por otra), cerrarla
+        if (window.opener) {
+            window.close();
+        } else {
+            // Si no, ir atrás en el historial
+            window.history.back();
+        }
+    });
+});
+</script>
+    
+   
+
+<style>
+/* ESTILOS PARA IMPRESIÓN - SIMPLIFICADOS */
+@media print {
+    /* Ocultar solo lo necesario */
+    .no-print,
+    .ticket-acciones {
+        display: none !important;
+    }
+    
+    /* Mostrar el ticket completo */
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .ticket-container {
+        width: 80mm !important;
+        max-width: 80mm !important;
+        margin: 0 auto !important;
+        padding: 5mm !important;
+        box-shadow: none !important;
+        border: none !important;
+        font-size: 11px !important;
+    }
+    
+    /* Configuración específica para tamaño ticket */
+    @page {
+        size: 80mm auto;
+        margin: 0;
+    }
+}
+</style>
+{% endblock %}
 {% endblock %}
