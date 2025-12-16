@@ -90,18 +90,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnImprimir = document.getElementById('btn-imprimir-ticket');
     const btnVolver = document.getElementById('btn-volver-ticket');
     
-    // BOTÓN IMPRIMIR - SIMPLIFICADO
+    // BOTÓN IMPRIMIR 
     btnImprimir.addEventListener('click', function() {
         window.print();
     });
     
-    // BOTÓN VOLVER - SIMPLIFICADO
     btnVolver.addEventListener('click', function() {
-        // Si esta ventana tiene un opener (fue abierta por otra), cerrarla
+        
         if (window.opener) {
             window.close();
         } else {
-            // Si no, ir atrás en el historial
+            
             window.history.back();
         }
     });
@@ -111,9 +110,9 @@ document.addEventListener('DOMContentLoaded', function() {
    
 
 <style>
-/* ESTILOS PARA IMPRESIÓN - SIMPLIFICADOS */
+
 @media print {
-    /* Ocultar solo lo necesario */
+  
     .no-print,
     .ticket-acciones {
         display: none !important;

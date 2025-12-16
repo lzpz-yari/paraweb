@@ -74,7 +74,7 @@ class FormValidator {
     }
     
     initializeValidation() {
-        // Prevenir envío del formulario al presionar Enter en inputs
+        // Prevenir envío del formulario al presionar ENTER en inputs
         this.form.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
                 e.preventDefault();
