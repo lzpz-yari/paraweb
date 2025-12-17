@@ -60,8 +60,16 @@
     
     <div class="ticket-separador"></div>
     
-    <div class="ticket-total">
-        <div class="ticket-total-row">
+    <div class="ticket-totales">
+        <div class="total-line">
+            <span>Subtotal:</span>
+            <span>${{ venta.subtotal|floatformat:2 }}</span>
+        </div>
+        <div class="total-line">
+            <span>IVA (16%):</span>
+            <span>${{ venta.iva|floatformat:2 }}</span>
+        </div>
+        <div class="total-line total-final">
             <span>TOTAL:</span>
             <span class="ticket-total-monto">${{ venta.total|floatformat:2 }}</span>
         </div>
@@ -90,35 +98,51 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnImprimir = document.getElementById('btn-imprimir-ticket');
     const btnVolver = document.getElementById('btn-volver-ticket');
     
-    // BOTÓN IMPRIMIR 
     btnImprimir.addEventListener('click', function() {
         window.print();
     });
     
     btnVolver.addEventListener('click', function() {
-        
         if (window.opener) {
             window.close();
         } else {
-            
             window.history.back();
         }
     });
 });
 </script>
-    
-   
 
 <style>
+.ticket-totales {
+    margin: 15px 0;
+}
+
+.ticket-totales .total-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 10px;
+    font-size: 14px;
+}
+
+.ticket-totales .total-final {
+    border-top: 2px solid #333;
+    margin-top: 10px;
+    padding-top: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.ticket-total-monto {
+    font-size: 20px;
+    font-weight: bold;
+}
 
 @media print {
-  
     .no-print,
     .ticket-acciones {
         display: none !important;
     }
     
-    /* Mostrar el ticket completo */
     body {
         margin: 0 !important;
         padding: 0 !important;
@@ -137,7 +161,14 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 11px !important;
     }
     
-    /* Configuración específica para tamaño ticket */
+    .ticket-totales .total-line {
+        font-size: 12px !important;
+    }
+    
+    .ticket-totales .total-final {
+        font-size: 14px !important;
+    }
+    
     @page {
         size: 80mm auto;
         margin: 0;

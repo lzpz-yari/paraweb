@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from decimal import Decimal
 from .image_utils import (
     process_product_image,
     delete_old_image,
@@ -38,7 +39,6 @@ class Producto(models.Model):
         help_text="descripción del producto"
     )
     
-    # Imagen principal optimizada
     imagen = models.ImageField(
         upload_to=upload_to_productos,
         blank=True,
@@ -52,13 +52,12 @@ class Producto(models.Model):
         ]
     )
     
-    # Thumbnail (se genera automáticamente)
     imagen_thumbnail = models.ImageField(
         upload_to='productos/thumbnails/',
         blank=True,
         null=True,
         verbose_name="miniatura",
-        editable=False  # No se edita manualmente
+        editable=False
     )
     
     precio_compra = models.DecimalField(
@@ -109,7 +108,6 @@ class Producto(models.Model):
     def save(self, *args, **kwargs):
         """Sobrescribir save para procesar imágenes"""
         if self.imagen:
-            # Si ya existía una imagen, eliminar la antigua
             if self.pk:
                 try:
                     old_producto = Producto.objects.get(pk=self.pk)
@@ -119,7 +117,6 @@ class Producto(models.Model):
                 except Producto.DoesNotExist:
                     pass
             
-            # Procesar nueva imagen
             try:
                 processed_image, thumbnail = process_product_image(self.imagen)
                 self.imagen = processed_image
@@ -178,12 +175,28 @@ class Venta(models.Model):
         help_text="fecha y hora de la venta"
     )
 
+    subtotal = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
+        verbose_name="subtotal",
+        help_text="total sin IVA"
+    )
+
+    iva = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
+        verbose_name="IVA (16%)",
+        help_text="impuesto al valor agregado"
+    )
+
     total = models.DecimalField(
         max_digits=10,  
         decimal_places=2,
         default=0.00,
         verbose_name="total de la venta",
-        help_text="monto de la venta"
+        help_text="subtotal + IVA"
     )
 
     estado = models.CharField(
@@ -215,10 +228,12 @@ class Venta(models.Model):
         return f"Venta #{self.id} - {self.fecha.strftime('%d/%m/%y %H:%M')} - ${self.total}"
     
     def calcular_total(self):
-        total = sum(detalle.subtotal for detalle in self.detalles.all())
-        self.total = total
+        """Calcula subtotal, IVA y total de la venta"""
+        self.subtotal = sum(detalle.subtotal for detalle in self.detalles.all())
+        self.iva = self.subtotal * Decimal('0.16')
+        self.total = self.subtotal + self.iva
         self.save()
-        return total
+        return self.total
     
     def cantidad_productos(self):
         return sum(detalle.cantidad for detalle in self.detalles.all())

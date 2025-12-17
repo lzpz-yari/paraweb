@@ -70,7 +70,7 @@ def punto_venta(request):
 @login_required
 @require_POST
 def procesar_venta(request):
-    """Procesar venta con validaciones del servidor"""
+    """Procesar venta con IVA incluido"""
     try:
         datos = json.loads(request.body)
         items = datos.get('items', [])
@@ -126,6 +126,8 @@ def procesar_venta(request):
         
         return JsonResponse({
             'venta_id': venta.id,
+            'subtotal': str(venta.subtotal),
+            'iva': str(venta.iva),
             'total': str(venta.total),
             'cantidad_items': venta.cantidad_items(),
             'fecha': venta.fecha.strftime('%d/%m/%Y %H:%M')

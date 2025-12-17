@@ -5,7 +5,7 @@ import sys
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-0ky8i6g0=vgu!)w_n-3#yqa-lcma*$uxr+m%&u-l#zj%j0fw&v'
-DEBUG = True
+DEBUG = False
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.dev']
 

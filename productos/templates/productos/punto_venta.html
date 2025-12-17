@@ -107,44 +107,52 @@
     </div>
     
     <!-- SECCIÓN DEL CARRITO -->
-    <div class="carrito-section">
-        <div class="carrito-sidebar">
-            <h3 class="carrito-titulo">Carrito de Compra</h3>
-            
-            <div id="carrito-items" class="carrito-items">
-                <div class="carrito-vacio">
-                    El carrito está vacío
-                </div>
-            </div>
-            
-            <div class="carrito-footer">
-                <div class="carrito-total">
-                    <strong>Total:</strong>
-                    <span class="carrito-total-monto">
-                        $<span id="carrito-total">0.00</span>
-                    </span>
-                </div>
-                
-                <button 
-                    onclick="procesarVenta()" 
-                    class="btn btn-procesar"
-                    id="btn-procesar"
-                    disabled
-                >
-                    Procesar Venta
-                </button>
-                
-                <button 
-                    onclick="limpiarCarrito()" 
-                    class="btn btn-limpiar"
-                    id="btn-limpiar"
-                    disabled
-                >
-                    Limpiar Carrito
-                </button>
+<div class="carrito-section">
+    <div class="carrito-sidebar">
+        <h3 class="carrito-titulo">Carrito de Compra</h3>
+        
+        <div id="carrito-items" class="carrito-items">
+            <div class="carrito-vacio">
+                El carrito está vacío
             </div>
         </div>
+        
+        <div class="carrito-footer">
+            <div class="carrito-totales">
+                <div class="total-line">
+                    <span>Subtotal:</span>
+                    <span id="subtotal-carrito" class="total-amount">$0.00</span>
+                </div>
+                <div class="total-line">
+                    <span>IVA (16%):</span>
+                    <span id="iva-carrito" class="total-amount">$0.00</span>
+                </div>
+                <div class="total-line total-final">
+                    <span>Total:</span>
+                    <span id="total-carrito" class="carrito-total-monto">$0.00</span>
+                </div>
+            </div>
+            
+            <button 
+                onclick="procesarVenta()" 
+                class="btn btn-procesar"
+                id="btn-procesar"
+                disabled
+            >
+                Procesar Venta
+            </button>
+            
+            <button 
+                onclick="limpiarCarrito()" 
+                class="btn btn-limpiar"
+                id="btn-limpiar"
+                disabled
+            >
+                Limpiar Carrito
+            </button>
+        </div>
     </div>
+</div>
 </div>
 {% endblock %}
 
@@ -218,24 +226,28 @@ function agregarAlCarrito(productoId, nombre, precio) {
 
 function actualizarCarrito() {
     const carritoDiv = document.getElementById('carrito-items');
-    const totalSpan = document.getElementById('carrito-total');
+    const subtotalSpan = document.getElementById('subtotal-carrito');
+    const ivaSpan = document.getElementById('iva-carrito');
+    const totalSpan = document.getElementById('total-carrito');
     const btnProcesar = document.getElementById('btn-procesar');
     const btnLimpiar = document.getElementById('btn-limpiar');
     
     if (carrito.length === 0) {
         carritoDiv.innerHTML = '<div class="carrito-vacio">El carrito está vacío</div>';
-        totalSpan.textContent = '0.00';
+        subtotalSpan.textContent = '$0.00';
+        ivaSpan.textContent = '$0.00';
+        totalSpan.textContent = '$0.00';
         btnProcesar.disabled = true;
         btnLimpiar.disabled = true;
         return;
     }
     
     let html = '';
-    let total = 0;
+    let subtotal = 0;
     
     carrito.forEach((item, index) => {
-        const subtotal = item.precio * item.cantidad;
-        total += subtotal;
+        const itemSubtotal = item.precio * item.cantidad;
+        subtotal += itemSubtotal;
         
         html += `
             <div class="carrito-item">
@@ -252,14 +264,19 @@ function actualizarCarrito() {
                     <button onclick="eliminarItem(${index})" class="btn-eliminar">X</button>
                 </div>
                 <div class="carrito-item-subtotal">
-                    $${subtotal.toFixed(2)}
+                    $${itemSubtotal.toFixed(2)}
                 </div>
             </div>
         `;
     });
     
+    const iva = subtotal * 0.16;
+    const total = subtotal + iva;
+    
     carritoDiv.innerHTML = html;
-    totalSpan.textContent = total.toFixed(2);
+    subtotalSpan.textContent = '$' + subtotal.toFixed(2);
+    ivaSpan.textContent = '$' + iva.toFixed(2);
+    totalSpan.textContent = '$' + total.toFixed(2);
     btnProcesar.disabled = false;
     btnLimpiar.disabled = false;
 }

@@ -336,3 +336,35 @@
         width: 100%;
     }
 }
+
+.carrito-totales {
+    padding: 15px 0;
+    border-top: 2px solid #e0e0e0;
+    margin-bottom: 15px;
+}
+.total-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 10px;
+    font-size: 14px;
+    color: #333;
+}
+
+.total-line.total-final {
+    border-top: 2px solid #2196F3;
+    margin-top: 10px;
+    padding-top: 12px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.total-amount {
+    font-weight: 600;
+    color: #27ae60;
+}
+
+.total-final .carrito-total-monto {
+    font-size: 20px;
+    color: #2196F3;
+    font-weight: bold;
+}
